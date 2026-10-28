@@ -1,0 +1,22 @@
+# Ciclo 2 REFACTOR - puede_modificar, autenticar simplificado, denegado() sin estado compartido
+# fecha: 2026-10-27T20:45:37-06:00
+# python: Python 3.14.0
+# base commit: a7c983c
+$ python -m unittest discover -s tests -v
+test_docente_lee_expediente_de_su_sede (test_unidad.LecturaExpedientes.test_docente_lee_expediente_de_su_sede) ... ok
+test_tc01_estudiante_lee_expediente_propio (test_unidad.LecturaExpedientes.test_tc01_estudiante_lee_expediente_propio) ... ok
+test_tc03_admin_lee_expedientes_de_ambas_sedes (test_unidad.LecturaExpedientes.test_tc03_admin_lee_expedientes_de_ambas_sedes) ... ok
+test_tc04a_estudiante_no_lee_expediente_ajeno (test_unidad.LecturaExpedientes.test_tc04a_estudiante_no_lee_expediente_ajeno) ... ok
+test_tc04b_docente_no_lee_expediente_de_otra_sede (test_unidad.LecturaExpedientes.test_tc04b_docente_no_lee_expediente_de_otra_sede) ... ok
+test_tc02_docente_actualiza_nota_en_su_sede (test_unidad.ModificacionNotas.test_tc02_docente_actualiza_nota_en_su_sede) ... ok
+test_tc05_docente_no_modifica_nota_de_otra_sede (test_unidad.ModificacionNotas.test_tc05_docente_no_modifica_nota_de_otra_sede) ... ok
+test_tc08_estudiante_y_admin_no_modifican_notas (test_unidad.ModificacionNotas.test_tc08_estudiante_y_admin_no_modifican_notas) ... ok
+test_tc06_sesion_revocada_no_lee_ni_modifica (test_unidad.Sesiones.test_tc06_sesion_revocada_no_lee_ni_modifica) ... ok
+test_tc07_sesion_vencida_no_lee_ni_modifica (test_unidad.Sesiones.test_tc07_sesion_vencida_no_lee_ni_modifica) ... ok
+test_token_desconocido_o_vacio_es_rechazado (test_unidad.Sesiones.test_token_desconocido_o_vacio_es_rechazado) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.001s
+
+OK
+# exit code: 0

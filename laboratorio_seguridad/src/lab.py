@@ -30,14 +30,13 @@ def estado_inicial():
 def autenticar(estado, token):
     """Recibe tokens SINTETICOS; no implementa autenticación de producción."""
     sesion = estado["sesiones"].get(token)
-    if sesion is None:
-        return None
-    if sesion["revocada"] or sesion["expirada"]:
+    if sesion is None or sesion["revocada"] or sesion["expirada"]:
         return None
     return USUARIOS[sesion["usuario"]]
 
 
-DENEGADO = (403, {"error": "Acceso denegado"})
+def denegado():
+    return 403, {"error": "Acceso denegado"}
 
 
 def puede_leer(usuario, expediente):
@@ -51,6 +50,10 @@ def puede_leer(usuario, expediente):
     return False
 
 
+def puede_modificar(usuario, expediente):
+    return usuario["rol"] == "docente" and expediente["sede"] == usuario["sede"]
+
+
 def leer_expediente(estado, token, expediente_id):
     usuario = autenticar(estado, token)
     if usuario is None:
@@ -59,7 +62,7 @@ def leer_expediente(estado, token, expediente_id):
     if expediente is None:
         return 404, {"error": "No existe"}
     if not puede_leer(usuario, expediente):
-        return DENEGADO
+        return denegado()
     estado["auditoria"].append({"accion": "lectura", "token": token, "id": expediente_id})
     return 200, dict(expediente)
 
@@ -71,12 +74,10 @@ def actualizar_nota(estado, token, expediente_id, nota):
     expediente = estado["expedientes"].get(expediente_id)
     if expediente is None:
         return 404, {"error": "No existe"}
-    if usuario["rol"] != "docente":
-        return 403, {"error": "Operación denegada"}
+    if not puede_modificar(usuario, expediente):
+        return denegado()
     if not isinstance(nota, (int, float)):
         return 400, {"error": "Nota inválida"}
-    if expediente["sede"] != usuario["sede"]:
-        return DENEGADO
     expediente["nota"] = nota
     estado["auditoria"].append({"accion": "actualizacion", "token": token, "id": expediente_id})
     return 200, dict(expediente)
