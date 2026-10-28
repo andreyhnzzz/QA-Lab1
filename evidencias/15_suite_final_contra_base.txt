@@ -1,0 +1,40 @@
+# Suite final ejecutada contra el codigo base (commit ff94b3d): estado de los casos ANTES de las correcciones
+# fecha: 2026-10-27T20:48:28-06:00 | Python 3.14.0
+test_ruta_inexistente_devuelve_404  ... ok
+test_salud_responde_sin_credenciales  ... ok
+test_tc01_api_estudiante_lee_expediente_propio  ... ok
+test_tc04_api_estudiante_no_lee_expediente_ajeno  ... FAIL
+test_tc05_api_docente_no_modifica_nota_de_otra_sede  ... FAIL
+test_tc06_api_sesion_revocada_pierde_acceso  ... FAIL
+test_tc07_api_sesion_vencida_o_ausente_es_rechazada  ... 
+  test_tc07_api_sesion_vencida_o_ausente_es_rechazada  (token='lab-vencida') ... FAIL
+test_tc09_api_entrada_invalida_devuelve_400_sin_cambios  ... 
+  test_tc09_api_entrada_invalida_devuelve_400_sin_cambios  (cuerpo='{"nota": NaN}') ... FAIL
+test_tc11_api_nota_fuera_de_rango_no_se_persiste  ... 
+  test_tc11_api_nota_fuera_de_rango_no_se_persiste  (valor=-1) ... FAIL
+  test_tc11_api_nota_fuera_de_rango_no_se_persiste  (valor=101) ... FAIL
+test_tc12_api_limite_de_tamano_del_cuerpo  ... ok
+test_tc12b_api_content_length_negativo_se_rechaza  ... ----------------------------------------
+test_sec07_auditoria_registra_usuario_y_no_guarda_tokens  ... FAIL
+test_docente_lee_expediente_de_su_sede  ... ok
+test_tc01_estudiante_lee_expediente_propio  ... ok
+test_tc03_admin_lee_expedientes_de_ambas_sedes  ... ok
+test_tc04a_estudiante_no_lee_expediente_ajeno  ... FAIL
+test_tc04b_docente_no_lee_expediente_de_otra_sede  ... FAIL
+test_tc02_docente_actualiza_nota_en_su_sede  ... ok
+test_tc05_docente_no_modifica_nota_de_otra_sede  ... FAIL
+test_tc08_estudiante_y_admin_no_modifican_notas  ... ok
+test_tc06_sesion_revocada_no_lee_ni_modifica  ... FAIL
+test_tc07_sesion_vencida_no_lee_ni_modifica  ... FAIL
+test_token_desconocido_o_vacio_es_rechazado  ... ok
+test_tc10_limites_0_y_100_son_aceptados  ... ok
+test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  ... 
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=-1) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=101) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=-0.01) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=100.01) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=nan) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=inf) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan  (nota=True) ... FAIL
+Ran 25 tests in 3.217s
+FAILED (failures=20, errors=1)

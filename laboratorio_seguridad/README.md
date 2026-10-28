@@ -1,57 +1,53 @@
-# Laboratorio local: seguridad de expedientes académicos
+# Laboratorio local: seguridad de expedientes académicos (v1.0.0)
 
-**Material didáctico, NO apto para producción.** Solo ejecutar en una máquina propia, en `127.0.0.1`, con datos y credenciales completamente ficticias. No publicar en Internet ni conectar a datos reales.
+Material didáctico, **no apto para producción**. Ejecutar solo en `127.0.0.1` con datos y tokens ficticios. La autenticación por token es simulada.
 
-## Requisitos
+## Entorno
 
-- Python 3.10 o superior.
-- Biblioteca estándar de Python: **no hay que instalar paquetes**.
-- Opcional: un editor y Postman o PowerShell para peticiones HTTP.
+- Python 3.10 o superior (probado con 3.14.0) y biblioteca estándar. No hay que instalar paquetes.
+- `curl` o PowerShell para las pruebas manuales (opcional).
 
-## Primeros pasos (desde la carpeta del proyecto)
+## Ejecutar las pruebas
 
-1. Ejecutar pruebas: `python -m unittest discover -s tests -v`
-2. Observar que algunas pruebas **fallan intencionalmente**: es el estado rojo inicial (NO significa que falte instalar algo).
-3. Ejecutar servidor local, en otra terminal: `python servidor.py`
-4. Probar endpoint de salud: `curl.exe http://127.0.0.1:8765/health`
-5. Detener con CTRL+C.
+Desde la carpeta `laboratorio_seguridad`:
 
-## Ejemplos de peticiones en Windows PowerShell
+```
+python -m unittest discover -s tests -v
+```
 
-- Consulta legítima: `curl.exe -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/expedientes/101`
-- Consulta entre sedes (debería denegarse tras corrección): `curl.exe -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/expedientes/202`
-- Cambio legítimo: `Invoke-RestMethod -Uri "http://127.0.0.1:8765/expedientes/101/nota" -Method Post -Headers @{ Authorization = "Bearer lab-maria" } -ContentType "application/json" -Body '{"nota":85}'`
-- Revocar sesión: `curl.exe -X POST -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/sesiones/revocar`
+Resultado esperado: `Ran 25 tests ... OK` (14 de unidad en `tests/test_unidad.py` y 11 de integración con la API en `tests/test_api.py`). Cada prueba crea su propio estado sintético, por lo que no hay que restablecer nada entre ejecuciones.
 
-Para reiniciar todos los datos y sesiones HTTP, detener y volver a ejecutar `servidor.py`.
-Las pruebas `unittest` reinician el estado automáticamente antes de cada caso.
+## Ejecutar el servidor y probar la API
 
-## Actores y reglas esperadas
+```
+python servidor.py
+curl.exe http://127.0.0.1:8765/health
+curl.exe -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/expedientes/101
+curl.exe -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/expedientes/202
+curl.exe -X POST -H "Authorization: Bearer lab-maria" -H "Content-Type: application/json" -d "{\"nota\":85}" http://127.0.0.1:8765/expedientes/101/nota
+curl.exe -X POST -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/sesiones/revocar
+```
 
-| Actor | Token sintético | Sede | Permisos esperados |
-| --- | --- | --- | --- |
-| Ana, estudiante | `lab-ana` | Central | Leer solo su expediente 101 |
-| Luis, estudiante | `lab-luis` | Pacífico | Leer solo su expediente 202 |
-| María, docente | `lab-maria` | Central | Leer y modificar solo notas de su sede |
-| Pedro, docente | `lab-pedro` | Pacífico | Leer y modificar solo notas de su sede |
-| Admin | `lab-admin` | Global | Leer expedientes; no cambiar notas |
-| Cuenta con sesión expirada | `lab-vencida` | Central | No debe consultar ni modificar |
+Detener con CTRL+C. Para restablecer los datos y sesiones sintéticos, detener el servidor y volver a ejecutarlo. La secuencia completa de pruebas manuales está en `../evidencias/pruebas_manuales.sh` (requiere el servidor activo; usar `sh` o Git Bash).
 
-Los códigos esperados para acceso denegado son `403`, para sesión ausente/revocada/expirada `401`, para datos inválidos `400`, y para operación permitida `200`. Para errores de permiso no incluir notas ni otros datos confidenciales; las decisiones no deben depender exclusivamente del código HTTP. Cualquier cambio rechazado debe conservar intacta la nota original.
+## Actores sintéticos
 
-## Trabajo estudiantil
+| Actor | Token | Sede | Lectura | Cambio de nota |
+| --- | --- | --- | --- | --- |
+| Ana, estudiante | `lab-ana` | Central | Solo expediente 101 | No |
+| Luis, estudiante | `lab-luis` | Pacifico | Solo expediente 202 | No |
+| María, docente | `lab-maria` | Central | Su sede | Su sede |
+| Pedro, docente | `lab-pedro` | Pacifico | Su sede | Su sede |
+| Admin | `lab-admin` | Global | Ambas sedes | No |
+| Sesión vencida | `lab-vencida` | Central | No | No |
 
-- Requisitos y amenazas: mínimo 6 requisitos, 5 amenazas, matriz requisito-riesgo-prueba.
-- Diseñar 12 casos: 3 positivos, 6 negativos y 3 de frontera; mínimo 8 automatizados.
-- Aplicar **dos ciclos TDD rojo-verde-refactor**. Los 2 tests iniciales marcados `test_rojo_...` son ejemplos, **no sustituyen la ampliación** de la suite.
-- Corregir los problemas observados, inspeccionar código y pruebas, realizar pruebas de API y documentar hallazgos.
-- Comprobar sesiones revocadas y expiradas, acceso horizontal y vertical, cambios no autorizados, valores de nota fuera de `[0,100]`, confidencialidad de respuestas y auditoría sin tokens.
-- Presentar un dictamen de liberación o bloqueo con riesgo residual. Evitar afirmaciones de seguridad absoluta.
+Códigos: `200` permitido, `400` entrada inválida, `401` sesión ausente, revocada o vencida, `403` acceso denegado, `404` recurso inexistente, `413` cuerpo mayor a 1024 bytes.
 
-## Estructura
+## Estructura del repositorio
 
-- `src/lab.py`: modelo de negocio con **defectos didácticos intencionales**.
-- `servidor.py`: API local mínima para pruebas HTTP.
-- `tests/test_laboratorio.py`: suite inicial con verificaciones positivas y dos casos rojos.
-
-El proyecto no usa contraseñas reales y los tokens no son credenciales reales. Los estudiantes **no deben copiar esta estrategia de autenticación a un sistema real**.
+- `laboratorio_seguridad/src/lab.py`: lógica de negocio y políticas de acceso.
+- `laboratorio_seguridad/servidor.py`: API HTTP local.
+- `laboratorio_seguridad/tests/`: pruebas de unidad e integración.
+- `evidencias/`: registros rojo-verde-refactor, ejecuciones limpias, pruebas manuales y SAST. `evidencias/run.sh <archivo> <etiqueta>` ejecuta la suite y guarda el registro.
+- `matriz_trazabilidad.csv`, `casos_prueba.csv`, `hallazgos.csv`: anexos del informe.
+- `informe_seguridad.pdf`: informe técnico.
