@@ -36,6 +36,20 @@ def autenticar(estado, token):
     return USUARIOS[sesion["usuario"]]
 
 
+DENEGADO = (403, {"error": "Acceso denegado"})
+
+
+def puede_leer(usuario, expediente):
+    rol = usuario["rol"]
+    if rol == "administrador":
+        return True
+    if rol == "docente":
+        return expediente["sede"] == usuario["sede"]
+    if rol == "estudiante":
+        return expediente["estudiante"] == usuario["id"]
+    return False
+
+
 def leer_expediente(estado, token, expediente_id):
     usuario = autenticar(estado, token)
     if usuario is None:
@@ -43,10 +57,8 @@ def leer_expediente(estado, token, expediente_id):
     expediente = estado["expedientes"].get(expediente_id)
     if expediente is None:
         return 404, {"error": "No existe"}
-    if usuario["rol"] == "estudiante" and expediente["estudiante"] != usuario["id"]:
-        return 403, {"error": "Acceso denegado"}
-    if usuario["rol"] == "docente" and expediente["sede"] != usuario["sede"]:
-        return 403, {"error": "Acceso denegado"}
+    if not puede_leer(usuario, expediente):
+        return DENEGADO
     estado["auditoria"].append({"accion": "lectura", "token": token, "id": expediente_id})
     return 200, dict(expediente)
 
