@@ -1,0 +1,14 @@
+﻿Requisito,Amenaza,Caso de prueba,Tipo,Evidencia esperada,Evidencia obtenida,Estado final
+SEC-01,R-01,TC-01,Positivo,200; estudiante=ana; nota=82,test_unidad.test_tc01_estudiante_lee_expediente_propio; test_api.test_tc01_api_estudiante_lee_expediente_propio,Aprobado
+SEC-02,R-02,TC-02,Positivo,200; nota 85 persistida,test_unidad.test_tc02_docente_actualiza_nota_en_su_sede,Aprobado
+SEC-01,R-01,TC-03,Positivo,200 en ambos,test_unidad.test_tc03_admin_lee_expedientes_de_ambas_sedes,Aprobado
+"SEC-01, SEC-06",R-01,TC-04,Negativo,403; cuerpo sin nota ni estudiante; nota 91 intacta,"test_unidad.test_tc04a_*, test_tc04b_*; test_api.test_tc04_api_*",Aprobado
+"SEC-02, SEC-06",R-02,TC-05,Negativo,403; sin nota en cuerpo; nota 91 intacta,test_unidad.test_tc05_*; test_api.test_tc05_api_*,Aprobado
+SEC-03,R-03,TC-06,Negativo,401 en ambos; sin nota; nota intacta,test_unidad.test_tc06_*; test_api.test_tc06_api_*,Aprobado
+SEC-03,R-03,TC-07,Negativo,401; sin nota; nota intacta,"test_unidad.test_tc07_*, test_token_desconocido_*; test_api.test_tc07_api_*",Aprobado
+SEC-02,R-05,TC-08,Negativo,403; sin nota en cuerpo; nota 82 intacta,test_unidad.test_tc08_estudiante_y_admin_no_modifican_notas,Aprobado
+SEC-05,R-06,TC-09,Negativo,400 en cada uno; nota 82 intacta,test_api.test_tc09_api_entrada_invalida_devuelve_400_sin_cambios,Aprobado
+SEC-04,R-04,TC-10,Frontera,200; el valor queda persistido,test_unidad.test_tc10_limites_0_y_100_son_aceptados,Aprobado
+SEC-04,R-04,TC-11,Frontera,400; sin nota en cuerpo; nota 82 intacta,test_unidad.test_tc11_*; test_api.test_tc11_api_*,Aprobado
+SEC-05,R-06,TC-12,Frontera,1024: 200; 1025: 413; -1: 400; el servidor responde,test_api.test_tc12_api_limite_de_tamano_del_cuerpo; test_tc12b_api_content_length_negativo_se_rechaza,Aprobado
+SEC-07,R-07,CT-01,Complementaria,"3 registros con usuario, acción, id y código; sin tokens",test_unidad.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens,Aprobado
