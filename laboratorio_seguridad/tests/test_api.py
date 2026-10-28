@@ -19,7 +19,7 @@ class ApiExpedientes(unittest.TestCase):
         self.estado = ManejadorSilencioso.estado
         self.servidor = ThreadingHTTPServer(("127.0.0.1", 0), ManejadorSilencioso)
         self.servidor.daemon_threads = True
-        threading.Thread(target=self.servidor.serve_forever, daemon=True).start()
+        threading.Thread(target=self.servidor.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True).start()
         self.addCleanup(self.servidor.server_close)
         self.addCleanup(self.servidor.shutdown)
 
