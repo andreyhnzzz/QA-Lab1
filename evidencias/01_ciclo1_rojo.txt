@@ -1,0 +1,34 @@
+# Ciclo 1 ROJO - SEC-01 acceso indebido a expedientes
+# fecha: 2026-10-27T20:44:55-06:00
+# python: Python 3.14.0
+# base commit: 54b6c78
+$ python -m unittest discover -s tests -v
+test_docente_lee_expediente_de_su_sede (test_unidad.LecturaExpedientes.test_docente_lee_expediente_de_su_sede) ... ok
+test_tc01_estudiante_lee_expediente_propio (test_unidad.LecturaExpedientes.test_tc01_estudiante_lee_expediente_propio) ... ok
+test_tc03_admin_lee_expedientes_de_ambas_sedes (test_unidad.LecturaExpedientes.test_tc03_admin_lee_expedientes_de_ambas_sedes) ... ok
+test_tc04a_estudiante_no_lee_expediente_ajeno (test_unidad.LecturaExpedientes.test_tc04a_estudiante_no_lee_expediente_ajeno) ... FAIL
+test_tc04b_docente_no_lee_expediente_de_otra_sede (test_unidad.LecturaExpedientes.test_tc04b_docente_no_lee_expediente_de_otra_sede) ... FAIL
+
+======================================================================
+FAIL: test_tc04a_estudiante_no_lee_expediente_ajeno (test_unidad.LecturaExpedientes.test_tc04a_estudiante_no_lee_expediente_ajeno)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 24, in test_tc04a_estudiante_no_lee_expediente_ajeno
+    self.assertEqual(403, codigo, "un estudiante leyo el expediente de otra persona")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 403 != 200 : un estudiante leyo el expediente de otra persona
+
+======================================================================
+FAIL: test_tc04b_docente_no_lee_expediente_de_otra_sede (test_unidad.LecturaExpedientes.test_tc04b_docente_no_lee_expediente_de_otra_sede)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 31, in test_tc04b_docente_no_lee_expediente_de_otra_sede
+    self.assertEqual(403, codigo, "un docente leyo un expediente de otra sede")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 403 != 200 : un docente leyo un expediente de otra sede
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+FAILED (failures=2)
+# exit code: 1
