@@ -32,7 +32,8 @@ def autenticar(estado, token):
     sesion = estado["sesiones"].get(token)
     if sesion is None:
         return None
-    # TODO SEC-03: investigar el tratamiento de sesiones revocadas o expiradas.
+    if sesion["revocada"] or sesion["expirada"]:
+        return None
     return USUARIOS[sesion["usuario"]]
 
 
@@ -74,7 +75,8 @@ def actualizar_nota(estado, token, expediente_id, nota):
         return 403, {"error": "Operación denegada"}
     if not isinstance(nota, (int, float)):
         return 400, {"error": "Nota inválida"}
-    # TODO SEC-02/SEC-04: inspeccionar la sede y los valores de frontera.
+    if expediente["sede"] != usuario["sede"]:
+        return DENEGADO
     expediente["nota"] = nota
     estado["auditoria"].append({"accion": "actualizacion", "token": token, "id": expediente_id})
     return 200, dict(expediente)
