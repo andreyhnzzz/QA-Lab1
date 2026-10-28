@@ -1,0 +1,75 @@
+
+### PM-01 salud
+$ curl http://127.0.0.1:8765/health
+{"estado": "laboratorio"}
+HTTP 200
+
+### PM-02 estudiante lee su expediente (permitido)
+$ curl -H Authorization: Bearer lab-ana http://127.0.0.1:8765/expedientes/101
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 82}
+HTTP 200
+
+### PM-03 estudiante lee expediente ajeno de otra sede (denegado)
+$ curl -H Authorization: Bearer lab-ana http://127.0.0.1:8765/expedientes/202
+{"error": "Acceso denegado"}
+HTTP 403
+
+### PM-04 docente Central cambia nota en Pacifico (denegado)
+$ curl -X POST -H Authorization: Bearer lab-maria -H Content-Type: application/json -d {"nota":10} http://127.0.0.1:8765/expedientes/202/nota
+{"error": "Acceso denegado"}
+HTTP 403
+
+### PM-05 nota fuera de rango 150 (entrada invalida)
+$ curl -X POST -H Authorization: Bearer lab-maria -H Content-Type: application/json -d {"nota":150} http://127.0.0.1:8765/expedientes/101/nota
+{"error": "Nota inválida"}
+HTTP 400
+
+### PM-06 JSON malformado (entrada invalida)
+$ curl -X POST -H Authorization: Bearer lab-maria -H Content-Type: application/json -d {nota: http://127.0.0.1:8765/expedientes/101/nota
+{"error": "JSON inválido"}
+HTTP 400
+
+### PM-07 administrador intenta cambiar nota (denegado)
+$ curl -X POST -H Authorization: Bearer lab-admin -H Content-Type: application/json -d {"nota":99} http://127.0.0.1:8765/expedientes/101/nota
+{"error": "Acceso denegado"}
+HTTP 403
+
+### PM-08 sesion vencida (rechazada)
+$ curl -H Authorization: Bearer lab-vencida http://127.0.0.1:8765/expedientes/101
+{"error": "No autenticado"}
+HTTP 401
+
+### PM-09 sin credenciales (rechazado)
+$ curl http://127.0.0.1:8765/expedientes/101
+{"error": "No autenticado"}
+HTTP 401
+
+### PM-10 docente Central actualiza nota propia sede (permitido)
+$ curl -X POST -H Authorization: Bearer lab-maria -H Content-Type: application/json -d {"nota":85} http://127.0.0.1:8765/expedientes/101/nota
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 85}
+HTTP 200
+
+### PM-11 revocar sesion de Ana
+$ curl -X POST -H Authorization: Bearer lab-ana http://127.0.0.1:8765/sesiones/revocar
+{"mensaje": "Sesión revocada"}
+HTTP 200
+
+### PM-12 lectura con sesion revocada (rechazada)
+$ curl -H Authorization: Bearer lab-ana http://127.0.0.1:8765/expedientes/101
+{"error": "No autenticado"}
+HTTP 401
+
+### PM-13 administrador lee expediente de Pacifico (permitido)
+$ curl -H Authorization: Bearer lab-admin http://127.0.0.1:8765/expedientes/202
+{"id": "202", "estudiante": "luis", "sede": "Pacifico", "nota": 91}
+HTTP 200
+
+### PM-14 Content-Length negativo (rechazado)
+$ curl -X POST -H Authorization: Bearer lab-maria -H Content-Length: -1 http://127.0.0.1:8765/expedientes/101/nota
+{"error": "Longitud inválida"}
+HTTP 400
+
+### PM-15 nota de Pacifico intacta tras los intentos rechazados
+$ curl -H Authorization: Bearer lab-pedro http://127.0.0.1:8765/expedientes/202
+{"id": "202", "estudiante": "luis", "sede": "Pacifico", "nota": 91}
+HTTP 200
