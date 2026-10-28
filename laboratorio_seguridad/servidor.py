@@ -38,6 +38,8 @@ class ServidorLaboratorio(BaseHTTPRequestHandler):
         if ruta.startswith("/expedientes/") and ruta.endswith("/nota"):
             try:
                 cantidad = int(self.headers.get("Content-Length", "0"))
+                if cantidad < 0:
+                    return self._salida(400, {"error": "Longitud inválida"})
                 if cantidad > 1024:
                     return self._salida(413, {"error": "Solicitud demasiado grande"})
                 datos = json.loads(self.rfile.read(cantidad).decode("utf-8"))
