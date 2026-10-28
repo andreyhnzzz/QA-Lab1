@@ -1,0 +1,104 @@
+# Ciclo 3 ROJO - SEC-04 validacion de nota y SEC-07 auditoria sin tokens
+# fecha: 2026-10-27T20:45:58-06:00
+# python: Python 3.14.0
+# base commit: cff6cb6
+$ python -m unittest discover -s tests -v
+test_sec07_auditoria_registra_usuario_y_no_guarda_tokens (test_unidad.Auditoria.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens) ... FAIL
+test_docente_lee_expediente_de_su_sede (test_unidad.LecturaExpedientes.test_docente_lee_expediente_de_su_sede) ... ok
+test_tc01_estudiante_lee_expediente_propio (test_unidad.LecturaExpedientes.test_tc01_estudiante_lee_expediente_propio) ... ok
+test_tc03_admin_lee_expedientes_de_ambas_sedes (test_unidad.LecturaExpedientes.test_tc03_admin_lee_expedientes_de_ambas_sedes) ... ok
+test_tc04a_estudiante_no_lee_expediente_ajeno (test_unidad.LecturaExpedientes.test_tc04a_estudiante_no_lee_expediente_ajeno) ... ok
+test_tc04b_docente_no_lee_expediente_de_otra_sede (test_unidad.LecturaExpedientes.test_tc04b_docente_no_lee_expediente_de_otra_sede) ... ok
+test_tc02_docente_actualiza_nota_en_su_sede (test_unidad.ModificacionNotas.test_tc02_docente_actualiza_nota_en_su_sede) ... ok
+test_tc05_docente_no_modifica_nota_de_otra_sede (test_unidad.ModificacionNotas.test_tc05_docente_no_modifica_nota_de_otra_sede) ... ok
+test_tc08_estudiante_y_admin_no_modifican_notas (test_unidad.ModificacionNotas.test_tc08_estudiante_y_admin_no_modifican_notas) ... ok
+test_tc06_sesion_revocada_no_lee_ni_modifica (test_unidad.Sesiones.test_tc06_sesion_revocada_no_lee_ni_modifica) ... ok
+test_tc07_sesion_vencida_no_lee_ni_modifica (test_unidad.Sesiones.test_tc07_sesion_vencida_no_lee_ni_modifica) ... ok
+test_token_desconocido_o_vacio_es_rechazado (test_unidad.Sesiones.test_token_desconocido_o_vacio_es_rechazado) ... ok
+test_tc10_limites_0_y_100_son_aceptados (test_unidad.ValidacionNota.test_tc10_limites_0_y_100_son_aceptados) ... ok
+test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) ... 
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=-1) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=101) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=-0.01) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=100.01) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=nan) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=inf) ... FAIL
+  test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=True) ... FAIL
+
+======================================================================
+FAIL: test_sec07_auditoria_registra_usuario_y_no_guarda_tokens (test_unidad.Auditoria.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 127, in test_sec07_auditoria_registra_usuario_y_no_guarda_tokens
+    self.assertEqual(3, len(registros), "faltan registros de auditoria")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 3 != 2 : faltan registros de auditoria
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=101)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=-0.01)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=100.01)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+======================================================================
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) (nota=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "~\Documents\Pruebas de Software Lab\QA-Lab1\laboratorio_seguridad\tests\test_unidad.py", line 113, in test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan
+    self.assertEqual(400, codigo, "se acepto una nota invalida")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 400 != 200 : se acepto una nota invalida
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.003s
+
+FAILED (failures=8)
+# exit code: 1

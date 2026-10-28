@@ -92,5 +92,48 @@ class ModificacionNotas(unittest.TestCase):
                 self.assertEqual(82, self.estado["expedientes"]["101"]["nota"])
 
 
+class ValidacionNota(unittest.TestCase):
+    def setUp(self):
+        self.estado = estado_inicial()
+
+    def test_tc10_limites_0_y_100_son_aceptados(self):
+        for nota in (0, 100):
+            with self.subTest(nota=nota):
+                self.estado = estado_inicial()
+                codigo, datos = actualizar_nota(self.estado, "lab-maria", "101", nota)
+                self.assertEqual(200, codigo)
+                self.assertEqual(nota, self.estado["expedientes"]["101"]["nota"])
+
+    def test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan(self):
+        invalidos = (-1, 101, -0.01, 100.01, float("nan"), float("inf"), True, "85", None)
+        for nota in invalidos:
+            with self.subTest(nota=nota):
+                self.estado = estado_inicial()
+                codigo, datos = actualizar_nota(self.estado, "lab-maria", "101", nota)
+                self.assertEqual(400, codigo, "se acepto una nota invalida")
+                self.assertNotIn("nota", datos)
+                self.assertEqual(82, self.estado["expedientes"]["101"]["nota"])
+
+
+class Auditoria(unittest.TestCase):
+    def setUp(self):
+        self.estado = estado_inicial()
+
+    def test_sec07_auditoria_registra_usuario_y_no_guarda_tokens(self):
+        leer_expediente(self.estado, "lab-ana", "101")
+        leer_expediente(self.estado, "lab-ana", "202")
+        actualizar_nota(self.estado, "lab-maria", "101", 90)
+        registros = self.estado["auditoria"]
+        self.assertEqual(3, len(registros), "faltan registros de auditoria")
+        for registro in registros:
+            self.assertNotIn("token", registro)
+            self.assertNotIn("lab-", str(registro), "la auditoria contiene un token")
+        self.assertEqual(
+            [("ana", "lectura", "101", 200), ("ana", "lectura", "202", 403),
+             ("maria", "actualizacion", "101", 200)],
+            [(r["usuario"], r["accion"], r["id"], r["codigo"]) for r in registros],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
