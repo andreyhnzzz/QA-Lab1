@@ -1,7 +1,6 @@
-"""Laboratorio didáctico: contiene fallas INTENCIONALES que deben identificarse.
+"""Laboratorio didáctico. No reutilizar en producción: la autenticación es simulada."""
+import math
 
-No se debe reutilizar este código en producción. No realiza autenticación real.
-"""
 
 USUARIOS = {
     "ana": {"id": "ana", "rol": "estudiante", "sede": "Central"},
@@ -54,6 +53,12 @@ def puede_modificar(usuario, expediente):
     return usuario["rol"] == "docente" and expediente["sede"] == usuario["sede"]
 
 
+def auditar(estado, usuario, accion, expediente_id, codigo):
+    estado["auditoria"].append(
+        {"usuario": usuario["id"], "accion": accion, "id": expediente_id, "codigo": codigo}
+    )
+
+
 def leer_expediente(estado, token, expediente_id):
     usuario = autenticar(estado, token)
     if usuario is None:
@@ -62,9 +67,16 @@ def leer_expediente(estado, token, expediente_id):
     if expediente is None:
         return 404, {"error": "No existe"}
     if not puede_leer(usuario, expediente):
+        auditar(estado, usuario, "lectura", expediente_id, 403)
         return denegado()
-    estado["auditoria"].append({"accion": "lectura", "token": token, "id": expediente_id})
+    auditar(estado, usuario, "lectura", expediente_id, 200)
     return 200, dict(expediente)
+
+
+def nota_valida(nota):
+    if isinstance(nota, bool) or not isinstance(nota, (int, float)):
+        return False
+    return math.isfinite(nota) and 0 <= nota <= 100
 
 
 def actualizar_nota(estado, token, expediente_id, nota):
@@ -75,11 +87,13 @@ def actualizar_nota(estado, token, expediente_id, nota):
     if expediente is None:
         return 404, {"error": "No existe"}
     if not puede_modificar(usuario, expediente):
+        auditar(estado, usuario, "actualizacion", expediente_id, 403)
         return denegado()
-    if not isinstance(nota, (int, float)):
+    if not nota_valida(nota):
+        auditar(estado, usuario, "actualizacion", expediente_id, 400)
         return 400, {"error": "Nota inválida"}
     expediente["nota"] = nota
-    estado["auditoria"].append({"accion": "actualizacion", "token": token, "id": expediente_id})
+    auditar(estado, usuario, "actualizacion", expediente_id, 200)
     return 200, dict(expediente)
 
 
