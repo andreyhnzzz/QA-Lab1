@@ -2,7 +2,7 @@
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
-from src.lab import estado_inicial, autenticar, auditar, leer_expediente, actualizar_nota, revocar_sesion
+from src.lab import estado_inicial, no_autenticado, autenticar, auditar, leer_expediente, actualizar_nota, revocar_sesion
 
 
 class ServidorLaboratorio(BaseHTTPRequestHandler):
@@ -40,7 +40,7 @@ class ServidorLaboratorio(BaseHTTPRequestHandler):
             expediente_id = segmentos[2]
             if autenticar(self.estado, self._token()) is None:
                 auditar(self.estado, None, "actualizacion", expediente_id, 401)
-                return self._salida(401, {"error": "No autenticado"})
+                return self._salida(*no_autenticado())
             try:
                 cantidad = int(self.headers.get("Content-Length", "0"))
                 if cantidad < 0:

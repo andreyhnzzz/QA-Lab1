@@ -34,6 +34,10 @@ def autenticar(estado, token):
     return USUARIOS[sesion["usuario"]]
 
 
+def no_autenticado():
+    return 401, {"error": "No autenticado"}
+
+
 def denegado():
     return 403, {"error": "Acceso denegado"}
 
@@ -63,7 +67,7 @@ def leer_expediente(estado, token, expediente_id):
     usuario = autenticar(estado, token)
     if usuario is None:
         auditar(estado, None, "lectura", expediente_id, 401)
-        return 401, {"error": "No autenticado"}
+        return no_autenticado()
     expediente = estado["expedientes"].get(expediente_id)
     if expediente is None:
         return 404, {"error": "No existe"}
@@ -84,7 +88,7 @@ def actualizar_nota(estado, token, expediente_id, nota):
     usuario = autenticar(estado, token)
     if usuario is None:
         auditar(estado, None, "actualizacion", expediente_id, 401)
-        return 401, {"error": "No autenticado"}
+        return no_autenticado()
     expediente = estado["expedientes"].get(expediente_id)
     if expediente is None:
         return 404, {"error": "No existe"}
@@ -103,7 +107,7 @@ def revocar_sesion(estado, token):
     sesion = estado["sesiones"].get(token)
     if sesion is None:
         auditar(estado, None, "revocacion", None, 401)
-        return 401, {"error": "No autenticado"}
+        return no_autenticado()
     sesion["revocada"] = True
     auditar(estado, USUARIOS[sesion["usuario"]], "revocacion", None, 200)
     return 200, {"mensaje": "Sesión revocada"}
