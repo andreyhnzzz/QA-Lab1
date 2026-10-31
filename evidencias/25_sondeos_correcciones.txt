@@ -1,0 +1,15 @@
+# Sondeos HTTP manuales tras el ciclo 4 (servidor local 127.0.0.1:8765, datos sinteticos)
+# fecha: 2026-10-30T21:45:16-06:00
+# python: Python 3.14.0
+# commit: fd04a3b
+
+$ O-04: POST /expedientes/101/x/nota (lab-maria) -> esperado 404
+{"error": "Ruta inexistente"} [HTTP 404]
+$ nota de 101 sigue en 82
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 82} [HTTP 200]
+
+$ O-05: POST sin token y JSON malformado -> esperado 401
+{"error": "No autenticado"} [HTTP 401]
+
+$ Control: POST canonico con lab-maria -> 200
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 85} [HTTP 200]

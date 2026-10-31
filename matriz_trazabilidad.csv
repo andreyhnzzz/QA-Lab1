@@ -9,6 +9,9 @@ SEC-03,R-03,TC-07,Negativo,401; sin nota; nota intacta,"test_unidad.test_tc07_*,
 SEC-02,R-05,TC-08,Negativo,403; sin nota en cuerpo; nota 82 intacta,test_unidad.test_tc08_estudiante_y_admin_no_modifican_notas,Aprobado
 SEC-05,R-06,TC-09,Negativo,400 en cada uno; nota 82 intacta,test_api.test_tc09_api_entrada_invalida_devuelve_400_sin_cambios,Aprobado
 SEC-04,R-04,TC-10,Frontera,200; el valor queda persistido,test_unidad.test_tc10_limites_0_y_100_son_aceptados,Aprobado
-SEC-04,R-04,TC-11,Frontera,400; sin nota en cuerpo; nota 82 intacta,test_unidad.test_tc11_*; test_api.test_tc11_api_*,Aprobado
+SEC-04,R-04,TC-11,Frontera,400; sin nota en cuerpo; nota 82 intacta,test_unidad.test_tc11_*; test_api.test_tc11_api_*; test_api.test_tc11_api_* (8 valores),Aprobado
 SEC-05,R-06,TC-12,Frontera,1024: 200; 1025: 413; -1: 400; el servidor responde,test_api.test_tc12_api_limite_de_tamano_del_cuerpo; test_tc12b_api_content_length_negativo_se_rechaza,Aprobado
 SEC-07,R-07,CT-01,Complementaria,"3 registros con usuario, acción, id y código; sin tokens",test_unidad.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens,Aprobado
+SEC-05,R-06,CT-02,Complementaria,404 en rutas no canónicas; nota 82 intacta,test_api.test_sec05_ruta_de_nota_con_segmentos_extra_devuelve_404,Aprobado
+SEC-03,R-03,CT-03,Complementaria,401 sin token aunque el cuerpo sea inválido o supere 1024 bytes; nota intacta,test_api.test_sec03_sin_token_se_responde_401_antes_de_leer_el_cuerpo,Aprobado
+SEC-07,R-07,CT-04,Complementaria,401 y revocación auditados con usuario; sin tokens en la bitácora,test_api.test_sec07_api_audita_401_y_revocaciones_sin_guardar_tokens,Aprobado

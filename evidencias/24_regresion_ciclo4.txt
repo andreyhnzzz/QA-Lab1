@@ -1,0 +1,39 @@
+# Regresion completa tras el ciclo 4 (estado limpio)
+# fecha: 2026-10-30T21:44:42-06:00
+# python: Python 3.14.0
+# base commit: fd04a3b
+$ python -m unittest discover -s tests -v
+test_ruta_inexistente_devuelve_404 (test_api.ApiExpedientes.test_ruta_inexistente_devuelve_404) ... ok
+test_salud_responde_sin_credenciales (test_api.ApiExpedientes.test_salud_responde_sin_credenciales) ... ok
+test_sec03_sin_token_se_responde_401_antes_de_leer_el_cuerpo (test_api.ApiExpedientes.test_sec03_sin_token_se_responde_401_antes_de_leer_el_cuerpo) ... ok
+test_sec05_ruta_de_nota_con_segmentos_extra_devuelve_404 (test_api.ApiExpedientes.test_sec05_ruta_de_nota_con_segmentos_extra_devuelve_404) ... ok
+test_sec07_api_audita_401_y_revocaciones_sin_guardar_tokens (test_api.ApiExpedientes.test_sec07_api_audita_401_y_revocaciones_sin_guardar_tokens) ... ok
+test_tc01_api_estudiante_lee_expediente_propio (test_api.ApiExpedientes.test_tc01_api_estudiante_lee_expediente_propio) ... ok
+test_tc04_api_estudiante_no_lee_expediente_ajeno (test_api.ApiExpedientes.test_tc04_api_estudiante_no_lee_expediente_ajeno) ... ok
+test_tc05_api_docente_no_modifica_nota_de_otra_sede (test_api.ApiExpedientes.test_tc05_api_docente_no_modifica_nota_de_otra_sede) ... ok
+test_tc06_api_sesion_revocada_pierde_acceso (test_api.ApiExpedientes.test_tc06_api_sesion_revocada_pierde_acceso) ... ok
+test_tc07_api_sesion_vencida_o_ausente_es_rechazada (test_api.ApiExpedientes.test_tc07_api_sesion_vencida_o_ausente_es_rechazada) ... ok
+test_tc09_api_entrada_invalida_devuelve_400_sin_cambios (test_api.ApiExpedientes.test_tc09_api_entrada_invalida_devuelve_400_sin_cambios) ... ok
+test_tc11_api_nota_fuera_de_rango_no_se_persiste (test_api.ApiExpedientes.test_tc11_api_nota_fuera_de_rango_no_se_persiste) ... ok
+test_tc12_api_limite_de_tamano_del_cuerpo (test_api.ApiExpedientes.test_tc12_api_limite_de_tamano_del_cuerpo) ... ok
+test_tc12b_api_content_length_negativo_se_rechaza (test_api.ApiExpedientes.test_tc12b_api_content_length_negativo_se_rechaza) ... ok
+test_sec07_auditoria_registra_usuario_y_no_guarda_tokens (test_unidad.Auditoria.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens) ... ok
+test_docente_lee_expediente_de_su_sede (test_unidad.LecturaExpedientes.test_docente_lee_expediente_de_su_sede) ... ok
+test_tc01_estudiante_lee_expediente_propio (test_unidad.LecturaExpedientes.test_tc01_estudiante_lee_expediente_propio) ... ok
+test_tc03_admin_lee_expedientes_de_ambas_sedes (test_unidad.LecturaExpedientes.test_tc03_admin_lee_expedientes_de_ambas_sedes) ... ok
+test_tc04a_estudiante_no_lee_expediente_ajeno (test_unidad.LecturaExpedientes.test_tc04a_estudiante_no_lee_expediente_ajeno) ... ok
+test_tc04b_docente_no_lee_expediente_de_otra_sede (test_unidad.LecturaExpedientes.test_tc04b_docente_no_lee_expediente_de_otra_sede) ... ok
+test_tc02_docente_actualiza_nota_en_su_sede (test_unidad.ModificacionNotas.test_tc02_docente_actualiza_nota_en_su_sede) ... ok
+test_tc05_docente_no_modifica_nota_de_otra_sede (test_unidad.ModificacionNotas.test_tc05_docente_no_modifica_nota_de_otra_sede) ... ok
+test_tc08_estudiante_y_admin_no_modifican_notas (test_unidad.ModificacionNotas.test_tc08_estudiante_y_admin_no_modifican_notas) ... ok
+test_tc06_sesion_revocada_no_lee_ni_modifica (test_unidad.Sesiones.test_tc06_sesion_revocada_no_lee_ni_modifica) ... ok
+test_tc07_sesion_vencida_no_lee_ni_modifica (test_unidad.Sesiones.test_tc07_sesion_vencida_no_lee_ni_modifica) ... ok
+test_token_desconocido_o_vacio_es_rechazado (test_unidad.Sesiones.test_token_desconocido_o_vacio_es_rechazado) ... ok
+test_tc10_limites_0_y_100_son_aceptados (test_unidad.ValidacionNota.test_tc10_limites_0_y_100_son_aceptados) ... ok
+test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (test_unidad.ValidacionNota.test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.285s
+
+OK
+# exit code: 0

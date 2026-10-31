@@ -1,4 +1,4 @@
-# Laboratorio local: seguridad de expedientes académicos (v1.0.0)
+# Laboratorio local: seguridad de expedientes académicos (v1.1.0)
 
 Material didáctico, **no apto para producción**. Ejecutar solo en `127.0.0.1` con datos y tokens ficticios. La autenticación por token es simulada.
 
@@ -19,7 +19,7 @@ python -m unittest discover -s tests -v
 
 En Linux o macOS: `python3 -m unittest discover -s tests -v`. Para repetir la ejecución en estado limpio, borrar antes las carpetas `__pycache__`.
 
-Resultado esperado: `Ran 25 tests ... OK` (14 de unidad en `tests/test_unidad.py` y 11 de integración con la API en `tests/test_api.py`). Cada prueba crea su propio estado sintético, por lo que no hay que restablecer nada entre ejecuciones.
+Resultado esperado: `Ran 28 tests ... OK` (14 de unidad en `tests/test_unidad.py` y 14 de integración con la API en `tests/test_api.py`). Cada prueba crea su propio estado sintético, por lo que no hay que restablecer nada entre ejecuciones.
 
 ## Ejecutar el servidor y probar la API
 

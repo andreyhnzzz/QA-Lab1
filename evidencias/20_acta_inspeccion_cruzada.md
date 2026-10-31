@@ -41,3 +41,8 @@ Resumen de mutaciones (`18_pruebas_mutacion.txt`): 8 de 8 mutaciones detectadas;
 | OB-6 | Baja | A nivel de API, TC-11 solo envía -1 y 101; booleanos y 100.01 solo se verifican en la prueba de unidad. | Registrada; mejora recomendada: ampliar los valores en `test_api` | O-07 |
 
 No se encontraron vulnerabilidades de severidad media, alta o crítica en la política de acceso inspeccionada. Los ajustes de código quedan fuera de esta acta; no se modificó ninguna aserción.
+
+## Seguimiento (2026-10-30, ciclo 4, v1.1.0)
+
+- OB-2, OB-3, OB-4 y OB-6 (O-04, O-05, O-06, O-07) se corrigieron con un ciclo rojo-verde-refactor: rojo `853f8ad` (`21_ciclo4_rojo.txt`), verde `5e49fbc` (`22_ciclo4_verde.txt`), refactor `fd04a3b` (`23_ciclo4_refactor.txt`). Regresión completa: 28 de 28 pruebas (`24_regresion_ciclo4.txt`); sondeos HTTP en `25_sondeos_correcciones.txt`.
+- OB-1 (O-01) y OB-5 (O-08) permanecen como riesgo residual aceptado.
