@@ -1,0 +1,87 @@
+# Revision de las pruebas: mutaciones manuales sobre src/lab.py (las pruebas deben FALLAR cuando el control falla)
+# fecha: 2026-10-30T19:47:02-06:00
+# ejecutor: Javier Alejandro Mendoza Gonzalez (revisor); comandos ejecutados mediante un asistente de IA (Claude Code)
+# entorno: Linux 7.0.0-42-generic, Python 3.14.4; clon limpio en commit 216e80c; las mutaciones se aplican en un clon descartable, no en el repositorio
+# nota: se borra __pycache__ y se usa python3 -B antes de cada corrida para evitar bytecode obsoleto
+
+## Linea base (sin mutacion)
+Ran 25 tests in 0.138s
+OK
+
+## M1: puede_modificar siempre permite (SEC-02)
+-    return usuario["rol"] == "docente" and expediente["sede"] == usuario["sede"]
++    return True
+FAIL: test_tc05_api_docente_no_modifica_nota_de_otra_sede
+FAIL: test_tc05_docente_no_modifica_nota_de_otra_sede
+FAIL: test_tc08_estudiante_y_admin_no_modifican_notas (token='lab-ana')
+FAIL: test_tc08_estudiante_y_admin_no_modifican_notas (token='lab-admin')
+Ran 25 tests in 0.139s
+FAILED (failures=4)
+
+## M2: puede_leer ignora la propiedad del estudiante (SEC-01)
+-        return expediente["estudiante"] == usuario["id"]
++        return True
+FAIL: test_tc04_api_estudiante_no_lee_expediente_ajeno
+FAIL: test_sec07_auditoria_registra_usuario_y_no_guarda_tokens
+FAIL: test_tc04a_estudiante_no_lee_expediente_ajeno
+Ran 25 tests in 0.134s
+FAILED (failures=3)
+
+## M3: limite superior de nota 100 pasa a 101 (SEC-04)
+-    return math.isfinite(nota) and 0 <= nota <= 100
++    return math.isfinite(nota) and 0 <= nota <= 101
+FAIL: test_tc11_api_nota_fuera_de_rango_no_se_persiste (valor=101)
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (nota=101)
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (nota=100.01)
+Ran 25 tests in 0.132s
+FAILED (failures=3)
+
+## M4: nota_valida acepta booleanos (SEC-04)
+-    if isinstance(nota, bool) or not isinstance(nota, (int, float)):
++    if not isinstance(nota, (int, float)):
+FAIL: test_tc11_valores_fuera_de_rango_o_no_numericos_se_rechazan (nota=True)
+Ran 25 tests in 0.131s
+FAILED (failures=1)
+
+## M5: autenticar ignora sesiones revocadas (SEC-03)
+-    if sesion is None or sesion["revocada"] or sesion["expirada"]:
++    if sesion is None or sesion["expirada"]:
+FAIL: test_tc06_api_sesion_revocada_pierde_acceso
+FAIL: test_tc06_sesion_revocada_no_lee_ni_modifica
+Ran 25 tests in 0.133s
+FAILED (failures=2)
+
+## M6: autenticar ignora sesiones vencidas (SEC-03)
+-    if sesion is None or sesion["revocada"] or sesion["expirada"]:
++    if sesion is None or sesion["revocada"]:
+FAIL: test_tc07_api_sesion_vencida_o_ausente_es_rechazada (token='lab-vencida')
+FAIL: test_tc07_sesion_vencida_no_lee_ni_modifica
+Ran 25 tests in 0.132s
+FAILED (failures=2)
+
+## M7: la respuesta 403 filtra la nota (SEC-06)
+-    return 403, {"error": "Acceso denegado"}
++    return 403, {"error": "Acceso denegado", "nota": 0}
+FAIL: test_tc04_api_estudiante_no_lee_expediente_ajeno
+FAIL: test_tc05_api_docente_no_modifica_nota_de_otra_sede
+FAIL: test_tc04a_estudiante_no_lee_expediente_ajeno
+FAIL: test_tc04b_docente_no_lee_expediente_de_otra_sede
+FAIL: test_tc05_docente_no_modifica_nota_de_otra_sede
+FAIL: test_tc08_estudiante_y_admin_no_modifican_notas (token='lab-ana')
+FAIL: test_tc08_estudiante_y_admin_no_modifican_notas (token='lab-admin')
+Ran 25 tests in 0.132s
+FAILED (failures=7)
+
+## M8: la bitacora guarda el token (SEC-07)
+-        {"usuario": usuario["id"], "accion": accion, "id": expediente_id, "codigo": codigo}
++        {"token": "lab-" + usuario["id"], "usuario": usuario["id"], "accion": accion, "id": expediente_id, "codigo": codigo}
+FAIL: test_sec07_auditoria_registra_usuario_y_no_guarda_tokens
+Ran 25 tests in 0.132s
+FAILED (failures=1)
+
+## Restaurado (sin mutacion)
+Ran 25 tests in 0.133s
+OK
+
+# git status del clon descartable tras restaurar:
+#   (vacio = sin cambios)
