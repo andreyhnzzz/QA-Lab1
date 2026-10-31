@@ -85,10 +85,11 @@ class ApiExpedientes(unittest.TestCase):
                 self.assertEqual(82, self.nota("101"))
 
     def test_tc11_api_nota_fuera_de_rango_no_se_persiste(self):
-        for valor in (-1, 101):
-            with self.subTest(valor=valor):
-                codigo, _ = self.pedir("POST", "/expedientes/101/nota", "lab-maria", '{"nota": %d}' % valor)
-                self.assertEqual(400, codigo)
+        for literal in ("-1", "101", "100.01", "-0.01", "true", "null", '"85"', "Infinity"):
+            with self.subTest(nota=literal):
+                codigo, datos = self.pedir("POST", "/expedientes/101/nota", "lab-maria", '{"nota": %s}' % literal)
+                self.assertEqual(400, codigo, "la nota %s debe rechazarse con 400" % literal)
+                self.assertNotIn("nota", datos)
                 self.assertEqual(82, self.nota("101"))
 
     def test_tc12_api_limite_de_tamano_del_cuerpo(self):
@@ -105,6 +106,37 @@ class ApiExpedientes(unittest.TestCase):
         codigo, _ = self.pedir("POST", "/expedientes/101/nota", "lab-maria", b"", longitud=-1)
         self.assertEqual(400, codigo)
         self.assertEqual(82, self.nota("101"))
+
+    def test_sec05_ruta_de_nota_con_segmentos_extra_devuelve_404(self):
+        for ruta in ("/expedientes/101/x/nota", "/expedientes/101/../101/nota", "/expedientes//nota", "/expedientes/101/nota/x"):
+            with self.subTest(ruta=ruta):
+                self.estado["expedientes"]["101"]["nota"] = 82  # subprueba independiente (F-01)
+                codigo, datos = self.pedir("POST", ruta, "lab-maria", '{"nota": 55}')
+                self.assertEqual(404, codigo, "la ruta no canonica %s no debe actualizar notas" % ruta)
+                self.assertNotIn("nota", datos)
+                self.assertEqual(82, self.nota("101"))
+
+    def test_sec03_sin_token_se_responde_401_antes_de_leer_el_cuerpo(self):
+        for cuerpo in ("{nota:", '{"nota": 55}', " " * 1025):
+            with self.subTest(cuerpo=cuerpo[:12]):
+                codigo, datos = self.pedir("POST", "/expedientes/101/nota", None, cuerpo)
+                self.assertEqual(401, codigo, "sin sesion debe responder 401, no 400 ni 413")
+                self.assertEqual({"error": "No autenticado"}, datos)
+                self.assertEqual(82, self.nota("101"))
+
+    def test_sec07_api_audita_401_y_revocaciones_sin_guardar_tokens(self):
+        self.pedir("GET", "/expedientes/101", "lab-inexistente")
+        self.pedir("GET", "/expedientes/101", "lab-vencida")
+        self.pedir("POST", "/sesiones/revocar", "lab-ana")
+        self.assertEqual(
+            [
+                {"usuario": None, "accion": "lectura", "id": "101", "codigo": 401},
+                {"usuario": None, "accion": "lectura", "id": "101", "codigo": 401},
+                {"usuario": "ana", "accion": "revocacion", "id": None, "codigo": 200},
+            ],
+            self.estado["auditoria"],
+        )
+        self.assertNotIn("lab-", str(self.estado["auditoria"]))
 
     def test_ruta_inexistente_devuelve_404(self):
         self.assertEqual(404, self.pedir("GET", "/administracion", "lab-admin")[0])
