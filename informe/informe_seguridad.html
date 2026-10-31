@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Informe de pruebas de seguridad de software</title>
+<style>
+@page { size: A4; margin: 14mm 14mm 14mm 14mm; }
+* { box-sizing: border-box; }
+body { font-family: Arial, 'Liberation Sans', sans-serif; font-size: 9.5pt; line-height: 1.35; color: #000; background: #fff; }
+h1 { font-size: 17pt; margin: 0 0 8pt; }
+h2 { font-size: 12.5pt; margin: 14pt 0 5pt; page-break-after: avoid; }
+h3 { font-size: 10.5pt; margin: 9pt 0 4pt; page-break-after: avoid; }
+p { margin: 5pt 0; }
+table { width: 100%; border-collapse: collapse; margin: 5pt 0 7pt; table-layout: fixed; }
+th, td { border: 0.6pt solid #000; padding: 3pt 4pt; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { background: #ddd; }
+tr { page-break-inside: avoid; }
+table.s th, table.s td { font-size: 8pt; padding: 2.5pt 3pt; }
+code { font-family: Consolas, 'DejaVu Sans Mono', monospace; font-size: 0.88em; }
+ul.c { list-style: none; padding: 0; margin: 3pt 0; font-size: 8.5pt; }
+ul.c li { margin: 1pt 0; }
+</style></head><body>
+<h1>Informe de pruebas de seguridad de software</h1>
+<table>
+<colgroup><col style="width:22%"><col style="width:78%"></colgroup>
+<thead><tr><th>Campo</th><th>Detalle</th></tr></thead><tbody>
+<tr><td>Curso</td><td>Pruebas de Software, Unidad IV: Creación de Pruebas de Seguridad. Periodo III-26, horario sábados 8am</td></tr>
+<tr><td>Código del curso</td><td>ISW-622</td></tr>
+<tr><td>Integrantes</td><td>Andrey Alonso Hernández Salazar; Javier Alejandro Mendoza Gonzalez</td></tr>
+<tr><td>Grupo</td><td>SC-02</td></tr>
+<tr><td>Fecha de entrega</td><td>2026-10-27</td></tr>
+<tr><td>Versión del informe</td><td>1.1 (actualizado el 2026-10-30 con la inspección cruzada, la prueba de reproducibilidad y los aportes del segundo integrante)</td></tr>
+<tr><td>Proyecto y versión</td><td>Laboratorio local de seguridad de expedientes académicos. Base v0.1.0; corregida v1.0.0</td></tr>
+<tr><td>Repositorio</td><td>https://github.com/andreyhnzzz/QA-Lab1</td></tr>
+</tbody></table>
+<h2>1. Alcance, activos y flujo de datos</h2>
+<p>Se probó el laboratorio local proporcionado (Python 3.14.0, biblioteca estándar, solo en 127.0.0.1, datos y tokens ficticios). Quedan fuera TLS, autenticación real, concurrencia y despliegue.</p>
+<table>
+<colgroup><col style="width:8%"><col style="width:52%"><col style="width:40%"></colgroup>
+<thead><tr><th>ID</th><th>Activo</th><th>Propiedad protegida</th></tr></thead><tbody>
+<tr><td>A1</td><td>Expedientes (id, estudiante, sede, nota)</td><td>Confidencialidad e integridad</td></tr>
+<tr><td>A2</td><td>Notas</td><td>Integridad</td></tr>
+<tr><td>A3</td><td>Sesiones y tokens sintéticos</td><td>Autenticación</td></tr>
+<tr><td>A4</td><td>Bitácora de auditoría</td><td>Trazabilidad</td></tr>
+<tr><td>A5</td><td>Políticas de acceso (puede_leer, puede_modificar)</td><td>Autorización</td></tr>
+<tr><td>A6</td><td>API HTTP local en 127.0.0.1:8765</td><td>Disponibilidad y validación de entrada</td></tr>
+</tbody></table>
+<p><b>Flujo:</b> cliente (curl, PowerShell o pruebas) -&gt; <code>servidor.py</code> (extrae el token Bearer, valida longitud y JSON) -&gt; <code>src/lab.py</code>: <code>autenticar</code> (A3) -&gt; <code>puede_leer</code> / <code>puede_modificar</code> (A5) -&gt; <code>nota_valida</code> -&gt; expedientes y notas (A1, A2) -&gt; <code>auditar</code> (A4) -&gt; respuesta JSON con código HTTP al cliente.</p>
+<h2>2. Amenazas priorizadas</h2>
+<table class="s">
+<colgroup><col style="width:6%"><col style="width:15%"><col style="width:20%"><col style="width:7%"><col style="width:18%"><col style="width:24%"><col style="width:10%"></colgroup>
+<thead><tr><th>ID</th><th>Actor</th><th>Acción de abuso</th><th>Activo</th><th>Impacto</th><th>Prioridad</th><th>Req.</th></tr></thead><tbody>
+<tr><td>R-01</td><td>Estudiante</td><td>Solicita el expediente de otra persona</td><td>A1</td><td>Filtración de nota y datos personales</td><td>Alta: probabilidad alta, impacto en privacidad</td><td>SEC-01</td></tr>
+<tr><td>R-02</td><td>Docente de otra sede</td><td>Cambia la nota de un expediente fuera de su sede</td><td>A2</td><td>Alteración no autorizada de notas</td><td>Crítica: afecta integridad académica</td><td>SEC-02</td></tr>
+<tr><td>R-03</td><td>Titular de token revocado o vencido</td><td>Reutiliza el token</td><td>A3</td><td>Acceso tras revocación</td><td>Alta: invalida el control de sesiones</td><td>SEC-03</td></tr>
+<tr><td>R-04</td><td>Docente (error o abuso)</td><td>Envía nota -1, 101, NaN o true</td><td>A2</td><td>Datos corruptos persistidos</td><td>Media: requiere cuenta docente</td><td>SEC-04</td></tr>
+<tr><td>R-05</td><td>Estudiante o administrador</td><td>Intenta cambiar una nota</td><td>A2</td><td>Escalada vertical de privilegios</td><td>Alta</td><td>SEC-02</td></tr>
+<tr><td>R-06</td><td>Cliente malicioso</td><td>JSON malformado, cuerpo mayor a 1024 bytes o Content-Length negativo</td><td>A6</td><td>Error o hilo bloqueado (denegación de servicio)</td><td>Media: solo local</td><td>SEC-05</td></tr>
+<tr><td>R-07</td><td>Persona con acceso a bitácora o respuestas de error</td><td>Lee tokens en bitácora o datos en errores</td><td>A4</td><td>Robo de credenciales y falta de trazabilidad</td><td>Media</td><td>SEC-06, SEC-07</td></tr>
+</tbody></table>
+<h2>3. Requisitos verificables y criterios de aceptación</h2>
+<table>
+<colgroup><col style="width:9%"><col style="width:20%"><col style="width:71%"></colgroup>
+<thead><tr><th>ID</th><th>Tipo</th><th>Requisito</th></tr></thead><tbody>
+<tr><td>SEC-01</td><td>Autorización y confidencialidad</td><td>Si un estudiante solicita un expediente ajeno, o un docente uno de otra sede, el servicio responde 403, no incluye la nota ni otros datos y no modifica registros. El administrador lee ambas sedes.</td></tr>
+<tr><td>SEC-02</td><td>Integridad</td><td>Solo un docente cambia notas y solo de su sede; estudiante y administrador reciben 403 y la nota original no cambia.</td></tr>
+<tr><td>SEC-03</td><td>Sesiones</td><td>Un token ausente, desconocido, revocado o vencido recibe 401 al leer y al modificar, sin datos del expediente. Tras revocar, el token deja de funcionar.</td></tr>
+<tr><td>SEC-04</td><td>Validación de la nota</td><td>La nota debe ser un número finito, no booleano, entre 0 y 100 inclusive; otro valor recibe 400 y no se persiste.</td></tr>
+<tr><td>SEC-05</td><td>Validación de la API</td><td>JSON malformado o no objeto recibe 400; cuerpo mayor a 1024 bytes recibe 413; Content-Length negativo recibe 400. Ninguno modifica datos ni bloquea el servidor.</td></tr>
+<tr><td>SEC-06</td><td>Confidencialidad de errores</td><td>Ninguna respuesta 400, 401, 403, 404 o 413 incluye nota, estudiante u otro dato del expediente.</td></tr>
+<tr><td>SEC-07</td><td>Trazabilidad</td><td>Cada lectura o modificación autenticada se registra con usuario, acción, expediente y código; la bitácora nunca contiene tokens.</td></tr>
+</tbody></table>
+<table>
+<colgroup><col style="width:7%"><col style="width:9%"><col style="width:22%"><col style="width:28%"><col style="width:34%"></colgroup>
+<thead><tr><th>ID</th><th>Req.</th><th>Dado</th><th>Cuando</th><th>Entonces</th></tr></thead><tbody>
+<tr><td>CA-1</td><td>SEC-01</td><td>Ana autenticada con lab-ana</td><td>solicita GET /expedientes/202</td><td>recibe 403 con {"error": "Acceso denegado"}, sin nota, y la nota 91 permanece</td></tr>
+<tr><td>CA-2</td><td>SEC-03</td><td>Ana con sesión revocada</td><td>solicita GET /expedientes/101</td><td>recibe 401 sin nota</td></tr>
+<tr><td>CA-3</td><td>SEC-04</td><td>María autenticada</td><td>envía {"nota": 101} al expediente 101</td><td>recibe 400 y la nota 82 permanece</td></tr>
+<tr><td>CA-4</td><td>SEC-02</td><td>María, docente de Central</td><td>envía una nota al expediente 202 de Pacífico</td><td>recibe 403 y la nota 91 permanece</td></tr>
+</tbody></table>
+<h2>4. Matriz de trazabilidad requisito, riesgo y prueba</h2>
+<table>
+<colgroup><col style="width:14%"><col style="width:9%"><col style="width:9%"><col style="width:52%"><col style="width:16%"></colgroup>
+<thead><tr><th>Req.</th><th>Riesgo</th><th>Caso</th><th>Evidencia esperada</th><th>Estado final</th></tr></thead><tbody>
+<tr><td>SEC-01</td><td>R-01</td><td>TC-01</td><td>200; estudiante=ana; nota=82</td><td>Aprobado</td></tr>
+<tr><td>SEC-02</td><td>R-02</td><td>TC-02</td><td>200; nota 85 persistida</td><td>Aprobado</td></tr>
+<tr><td>SEC-01</td><td>R-01</td><td>TC-03</td><td>200 en ambos</td><td>Aprobado</td></tr>
+<tr><td>SEC-01, SEC-06</td><td>R-01</td><td>TC-04</td><td>403; cuerpo sin nota ni estudiante; nota 91 intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-02, SEC-06</td><td>R-02</td><td>TC-05</td><td>403; sin nota en cuerpo; nota 91 intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-03</td><td>R-03</td><td>TC-06</td><td>401 en ambos; sin nota; nota intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-03</td><td>R-03</td><td>TC-07</td><td>401; sin nota; nota intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-02</td><td>R-05</td><td>TC-08</td><td>403; sin nota en cuerpo; nota 82 intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-05</td><td>R-06</td><td>TC-09</td><td>400 en cada uno; nota 82 intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-04</td><td>R-04</td><td>TC-10</td><td>200; el valor queda persistido</td><td>Aprobado</td></tr>
+<tr><td>SEC-04</td><td>R-04</td><td>TC-11</td><td>400; sin nota en cuerpo; nota 82 intacta</td><td>Aprobado</td></tr>
+<tr><td>SEC-05</td><td>R-06</td><td>TC-12</td><td>1024: 200; 1025: 413; -1: 400; el servidor responde</td><td>Aprobado</td></tr>
+<tr><td>SEC-07</td><td>R-07</td><td>CT-01</td><td>3 registros con usuario, acción, id y código; sin tokens</td><td>Aprobado</td></tr>
+</tbody></table>
+<p>Cobertura: los 7 requisitos tienen al menos una prueba automatizada. Anexos CSV: <code>matriz_trazabilidad.csv</code>, <code>casos_prueba.csv</code>, <code>hallazgos.csv</code>.</p>
+<h2>5. Diseño de los 12 casos (3 positivos, 6 negativos y 3 de frontera)</h2>
+<table class="s">
+<colgroup><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:18%"><col style="width:17%"><col style="width:15%"><col style="width:17%"><col style="width:11%"></colgroup>
+<thead><tr><th>ID</th><th>Tipo</th><th>Req.</th><th>Precondiciones</th><th>Entradas</th><th>Pasos</th><th>Resultado esperado</th><th>Nivel</th></tr></thead><tbody>
+<tr><td>TC-01</td><td>Positivo</td><td>SEC-01</td><td>lab-ana válido; expediente 101 con nota 82</td><td>lab-ana, id 101</td><td>leer_expediente / GET /expedientes/101</td><td>200; estudiante=ana; nota=82</td><td>Unidad e integración</td></tr>
+<tr><td>TC-02</td><td>Positivo</td><td>SEC-02</td><td>lab-maria (docente Central) válido; expediente 101 nota 82</td><td>lab-maria, id 101, nota 85</td><td>actualizar_nota</td><td>200; nota 85 persistida</td><td>Unidad</td></tr>
+<tr><td>TC-03</td><td>Positivo</td><td>SEC-01</td><td>lab-admin válido; expedientes 101 y 202</td><td>lab-admin, ids 101 y 202</td><td>leer_expediente por cada id</td><td>200 en ambos</td><td>Unidad</td></tr>
+<tr><td>TC-04</td><td>Negativo</td><td>SEC-01, SEC-06</td><td>lab-ana (Central) y lab-maria (Central) válidos; expediente 202 (Pacífico) nota 91</td><td>a) lab-ana, 202; b) lab-maria, 202</td><td>leer_expediente / GET /expedientes/202</td><td>403; cuerpo sin nota ni estudiante; nota 91 intacta</td><td>Unidad e integración</td></tr>
+<tr><td>TC-05</td><td>Negativo</td><td>SEC-02, SEC-06</td><td>lab-maria (Central) válido; expediente 202 nota 91</td><td>lab-maria, 202, nota 10</td><td>actualizar_nota / POST /expedientes/202/nota</td><td>403; sin nota en cuerpo; nota 91 intacta</td><td>Unidad e integración</td></tr>
+<tr><td>TC-06</td><td>Negativo</td><td>SEC-03</td><td>Sesión revocada con POST /sesiones/revocar</td><td>token revocado; lectura y cambio de nota</td><td>revocar; leer; actualizar</td><td>401 en ambos; sin nota; nota intacta</td><td>Unidad e integración</td></tr>
+<tr><td>TC-07</td><td>Negativo</td><td>SEC-03</td><td>Token lab-vencida (expirada); también token ausente, vacío o desconocido</td><td>lab-vencida; sin token; lab-inexistente; vacío</td><td>leer y actualizar</td><td>401; sin nota; nota intacta</td><td>Unidad e integración</td></tr>
+<tr><td>TC-08</td><td>Negativo</td><td>SEC-02</td><td>lab-ana y lab-admin válidos; expediente 101 nota 82</td><td>cada token, id 101, nota 100</td><td>actualizar_nota</td><td>403; sin nota en cuerpo; nota 82 intacta</td><td>Unidad</td></tr>
+<tr><td>TC-09</td><td>Negativo</td><td>SEC-05</td><td>Servidor local activo; lab-maria válido</td><td>Cuerpos: {no es json; [1, 2]; {"nota": "alta"}; {"otro": 1}; {"nota": NaN}</td><td>POST /expedientes/101/nota</td><td>400 en cada uno; nota 82 intacta</td><td>Integración</td></tr>
+<tr><td>TC-10</td><td>Frontera</td><td>SEC-04</td><td>lab-maria válido; expediente 101</td><td>nota 0; nota 100</td><td>actualizar_nota</td><td>200; el valor queda persistido</td><td>Unidad</td></tr>
+<tr><td>TC-11</td><td>Frontera</td><td>SEC-04</td><td>lab-maria válido; expediente 101 nota 82</td><td>-1; 101; -0.01; 100.01; NaN; inf; true; "85"; null (API: -1 y 101)</td><td>actualizar_nota / POST nota</td><td>400; sin nota en cuerpo; nota 82 intacta</td><td>Unidad e integración</td></tr>
+<tr><td>TC-12</td><td>Frontera</td><td>SEC-05</td><td>Servidor local activo; lab-maria válido</td><td>cuerpo de 1024 bytes; 1025 bytes; Content-Length -1</td><td>POST /expedientes/101/nota</td><td>1024: 200; 1025: 413; -1: 400; el servidor responde</td><td>Integración</td></tr>
+</tbody></table>
+<p>Pruebas: CT-01 (SEC-07): <code>test_unidad.test_sec07_auditoria_registra_usuario_y_no_guarda_tokens</code> (unidad); resultado inicial Fallido, final Aprobado. Total de pruebas automatizadas: 25 (14 de unidad en <code>tests/test_unidad.py</code> y 11 de integración en <code>tests/test_api.py</code>). Los 12 casos están automatizados. Los nombres de las pruebas están en <code>casos_prueba.csv</code>.</p>
+<h2>6. Ciclos TDD rojo, verde y refactor</h2>
+<p>Los ciclos 1 y 2 son los exigidos (acceso indebido; sesión y modificación no autorizada). El ciclo 3 y H-01 son adicionales. Cada paso tiene su commit y su registro en <code>evidencias/</code> (con fecha, versión de Python y comando).</p>
+<table class="s">
+<colgroup><col style="width:18%"><col style="width:10%"><col style="width:20%"><col style="width:10%"><col style="width:15%"><col style="width:10%"><col style="width:17%"></colgroup>
+<thead><tr><th>Ciclo</th><th>Rojo (commit)</th><th>Evidencia roja</th><th>Verde (commit)</th><th>Evidencia verde</th><th>Refactor (commit)</th><th>Evidencia refactor</th></tr></thead><tbody>
+<tr><td>1 (acceso indebido, SEC-01)</td><td>fc579f5</td><td>01_ciclo1_rojo.txt: 403 != 200 en TC-04a y TC-04b (2 fallos)</td><td>761a2e8</td><td>02_ciclo1_verde.txt: 5 pruebas OK</td><td>e6a4842</td><td>03_ciclo1_refactor.txt: 5 pruebas OK</td></tr>
+<tr><td>2 (sesión y modificación, SEC-02/SEC-03)</td><td>ebc091f</td><td>04_ciclo2_rojo.txt: 401 != 200 (TC-06, TC-07) y 403 != 200 (TC-05) (3 fallos)</td><td>a7c983c</td><td>05_ciclo2_verde.txt: 11 pruebas OK</td><td>f269461</td><td>06_ciclo2_refactor.txt: 11 pruebas OK</td></tr>
+<tr><td>3 (validación y auditoría, SEC-04/SEC-07)</td><td>1e6ce17</td><td>07_ciclo3_rojo.txt: 8 fallos (TC-11 y CT-01)</td><td>b7aeb4c</td><td>08_ciclo3_verde.txt: 14 pruebas OK</td><td>c328f7e</td><td>11_refactor_final.txt: 25 pruebas OK</td></tr>
+<tr><td>H-01 (API, SEC-05)</td><td>b7aeb4c / 76293a1</td><td>09_api_rojo.txt: TimeoutError en TC-12b (1 error)</td><td>98ad2a5</td><td>10_api_verde.txt: 25 pruebas OK</td><td>c328f7e</td><td>11_refactor_final.txt: 25 pruebas OK</td></tr>
+</tbody></table>
+<p>Cambios mínimos del verde: ciclo 1, condición de rol y propiedad en <code>leer_expediente</code>; ciclo 2, rechazo de sesiones revocadas o vencidas y comparación de sede en <code>actualizar_nota</code>; ciclo 3, <code>nota_valida</code> y bitácora sin token; H-01, rechazo de <code>Content-Length</code> negativo. Refactor: <code>puede_leer</code>, <code>puede_modificar</code>, <code>denegado()</code>, <code>autenticar</code> simplificado. Los registros rojos corresponden al árbol de trabajo previo al commit indicado.</p>
+<h2>7. Ejecución, pruebas manuales e inspección estática</h2>
+<p>Ejecuciones limpias (sin <code>__pycache__</code>), comando <code>python -m unittest discover -s tests -v</code>, Python 3.14.0, Windows 11: 25 pruebas, OK, dos veces (<code>14_ejecucion_limpia_1.txt</code> y <code>14_ejecucion_limpia_2.txt</code>). Clon limpio del repositorio: 25 pruebas OK. Suite final contra el código base: 20 fallos y 1 error (<code>15_suite_final_contra_base.txt</code>). Una tercera y cuarta ejecución limpia en Linux, Python 3.14.4, con el README como única guía, también dieron 25 pruebas OK (<code>17_reproducibilidad_readme.txt</code>).</p>
+<p>Pruebas manuales por API (DAST manual) con curl contra el servidor local ya corregido (<code>evidencias/pruebas_manuales.sh</code>, resultados en <code>12_pruebas_manuales.txt</code>). Los 15 resultados coincidieron con lo esperado. El mismo guion se repitió en Linux con el mismo resultado (<code>17_reproducibilidad_readme.txt</code>).</p>
+<table>
+<colgroup><col style="width:10%"><col style="width:60%"><col style="width:30%"></colgroup>
+<thead><tr><th>ID</th><th>Solicitud</th><th>Resultado</th></tr></thead><tbody>
+<tr><td>PM-01</td><td>GET /health</td><td>200</td></tr>
+<tr><td>PM-02</td><td>lab-ana lee 101 (propio)</td><td>200 con nota 82</td></tr>
+<tr><td>PM-03</td><td>lab-ana lee 202 (otra sede)</td><td>403 sin nota</td></tr>
+<tr><td>PM-04</td><td>lab-maria cambia nota de 202 (otra sede)</td><td>403</td></tr>
+<tr><td>PM-05</td><td>nota 150</td><td>400</td></tr>
+<tr><td>PM-06</td><td>JSON malformado</td><td>400</td></tr>
+<tr><td>PM-07</td><td>lab-admin cambia nota</td><td>403</td></tr>
+<tr><td>PM-08</td><td>lab-vencida lee 101</td><td>401</td></tr>
+<tr><td>PM-09</td><td>sin token</td><td>401</td></tr>
+<tr><td>PM-10</td><td>lab-maria cambia nota de 101 a 85</td><td>200</td></tr>
+<tr><td>PM-11</td><td>revocar lab-ana</td><td>200</td></tr>
+<tr><td>PM-12</td><td>lab-ana lee 101 tras revocar</td><td>401</td></tr>
+<tr><td>PM-13</td><td>lab-admin lee 202</td><td>200</td></tr>
+<tr><td>PM-14</td><td>Content-Length -1</td><td>400</td></tr>
+<tr><td>PM-15</td><td>lab-pedro lee 202 tras los intentos rechazados</td><td>200 con nota 91 intacta</td></tr>
+</tbody></table>
+<p>Inspección estática (SAST): lista de comprobación manual y Bandit 1.9.4 (<code>13_sast_bandit.txt</code>: 0 incidencias, resultado no concluyente para lógica de autorización). La inspección cruzada añadió una lectura independiente del código (ver sección 8).</p>
+<table>
+<colgroup><col style="width:20%"><col style="width:80%"></colgroup>
+<thead><tr><th>Control</th><th>Resultado</th></tr></thead><tbody>
+<tr><td>Permisos</td><td>Cumple: lectura y cambio se deciden por rol, propiedad y sede en funciones separadas</td></tr>
+<tr><td>Validación</td><td>Cumple: nota numérica finita en [0,100]; JSON objeto; límite de 1024 bytes; longitud no negativa. Mejora: la ruta de actualización acepta segmentos intermedios (O-04)</td></tr>
+<tr><td>Manejo de errores</td><td>Cumple: códigos 400, 401, 403, 404, 413 con mensajes genéricos; sin trazas al cliente. Mejora: el cuerpo se procesa antes de autenticar (O-05)</td></tr>
+<tr><td>Exposición de datos</td><td>Cumple con O-01: las denegaciones no incluyen datos; 404 frente a 403 permite enumerar ids</td></tr>
+<tr><td>Auditoría</td><td>Cumple: usuario, acción, id y código; sin tokens; incluye intentos denegados. Mejora: no registra 401 ni revocaciones (O-06)</td></tr>
+</tbody></table>
+<h2>8. Inspección, usabilidad y reproducibilidad</h2>
+<h3>Acta de inspección</h3>
+<table>
+<colgroup><col style="width:24%"><col style="width:76%"></colgroup>
+<thead><tr><th>Campo</th><th>Registro</th></tr></thead><tbody>
+<tr><td>Autor</td><td>Andrey Alonso Hernández Salazar</td></tr>
+<tr><td>Revisor (persona distinta del autor)</td><td>Javier Alejandro Mendoza Gonzalez</td></tr>
+<tr><td>Fecha</td><td>2026-10-30</td></tr>
+<tr><td>Objetos inspeccionados</td><td>Política de acceso (<code>puede_leer</code>, <code>puede_modificar</code> y su aplicación en <code>servidor.py</code>) y casos TC-05 y TC-11</td></tr>
+<tr><td>Observaciones</td><td>OB-1 (Baja): 404 frente a 403 permite enumerar ids (O-01). OB-2 (Baja): la ruta de actualización acepta segmentos intermedios (O-04). OB-3 (Baja): el cuerpo se procesa antes de autenticar y sin token con JSON malformado se responde 400 (O-05). OB-4 (Baja): la bitácora no registra 401 ni revocaciones (O-06). OB-5 (Baja, prueba): estado de clase compartido y tiempo fijo en las pruebas de API (O-08). OB-6 (Baja, prueba): TC-11 por API solo envía -1 y 101 (O-07). Además, de la revisión previa del autor: estado global sin locks (O-02), revocar devuelve 200 sobre token inválido (O-03) y TC-11 con estado compartido entre subpruebas (F-01, corregida).</td></tr>
+<tr><td>Acciones</td><td>OB-1, OB-5: riesgo residual aceptado. OB-2, OB-3, OB-4, OB-6: registradas como mejora recomendada, sin cambio de código ni de aserciones en v1.0.0. F-01: corregida.</td></tr>
+<tr><td>Registro completo</td><td><code>evidencias/20_acta_inspeccion_cruzada.md</code></td></tr>
+</tbody></table>
+<p>Revisión de las pruebas: TC-05 y TC-11 comprueban el efecto sobre los datos (nota intacta y ausencia de <code>nota</code> en el cuerpo), crean su propio estado (<code>estado_inicial()</code> y un servidor con puerto efímero por prueba) y pueden fallar cuando el control falla. Esto se demostró con 8 mutaciones manuales de <code>src/lab.py</code> (autorización de lectura y de cambio, límite de nota, booleanos, sesión revocada y vencida, filtración en 403 y token en bitácora): la suite detectó las 8 y aprobó 25 de 25 antes y después (<code>18_pruebas_mutacion.txt</code>). La mutación que acepta booleanos solo la detecta la prueba de unidad (O-07). TC-12 depende de un tiempo máximo de 3 s para detectar el bloqueo (O-08).</p>
+<h3>Usabilidad y mensajes</h3>
+<table>
+<colgroup><col style="width:24%"><col style="width:24%"><col style="width:52%"></colgroup>
+<thead><tr><th>Situación</th><th>Mensaje</th><th>Valoración</th></tr></thead><tbody>
+<tr><td>Sesión inválida (ausente, revocada o vencida)</td><td>401 {"error": "No autenticado"}</td><td>Claro: indica que debe autenticarse. No distingue entre revocada, vencida o inexistente, lo que evita revelar si un token existió; el detalle queda para el diagnóstico interno.</td></tr>
+<tr><td>Acceso denegado</td><td>403 {"error": "Acceso denegado"}</td><td>Claro y sin nota ni datos del expediente. Limitación: 404 en ids inexistentes permite inferir existencia (O-01).</td></tr>
+</tbody></table>
+<p>Ajustes de mantenimiento (Fase E): se renombraron <code>test_rojo_*</code> a <code>test_tcNN_*</code>, se agregaron mensajes de diagnóstico en las aserciones y se aisló el estado de cada subprueba de TC-11. Tras la prueba de reproducibilidad se documentaron en el README las diferencias entre Windows y Linux/macOS (<code>python</code> frente a <code>python3</code>, <code>curl.exe</code> frente a <code>curl</code>) y <code>evidencias/run.sh</code> usa <code>python3</code> cuando <code>python</code> no existe.</p>
+<h3>Prueba de reproducibilidad con el README</h3>
+<p>Javier Alejandro Mendoza Gonzalez, persona distinta del autor, siguió solo el README en un clon limpio del repositorio (commit <code>216e80c</code>) en Linux con Python 3.14.4 y curl 8.18.0; el autor había usado Windows 11 y Python 3.14.0. Los comandos se ejecutaron con ayuda de un asistente de IA (Claude Code) y el revisor validó los resultados. Resultado: 25 pruebas OK en dos ejecuciones limpias y 15 de 15 solicitudes manuales conforme a lo esperado (<code>17_reproducibilidad_readme.txt</code>).</p>
+<table>
+<colgroup><col style="width:8%"><col style="width:57%"><col style="width:35%"></colgroup>
+<thead><tr><th>ID</th><th>Dificultad encontrada</th><th>Tratamiento</th></tr></thead><tbody>
+<tr><td>D-1</td><td><code>python -m unittest ...</code> falla con <code>python: command not found</code>: en Linux el intérprete se llama <code>python3</code>.</td><td>Se documentó en el README y <code>run.sh</code> usa <code>python3</code> como alternativa.</td></tr>
+<tr><td>D-2</td><td>Los ejemplos con <code>curl.exe</code> no funcionan en Linux; hay que usar <code>curl</code> y comillas simples en el cuerpo JSON.</td><td>Se documentó en el README con un ejemplo.</td></tr>
+</tbody></table>
+<p>Conclusión: con esas dos sustituciones los pasos del README fueron suficientes; no hubo que instalar paquetes ni restablecer datos.</p>
+<h2>9. Registro de hallazgos</h2>
+<table class="s">
+<colgroup><col style="width:5%"><col style="width:7%"><col style="width:7%"><col style="width:6%"><col style="width:19%"><col style="width:10%"><col style="width:10%"><col style="width:11%"><col style="width:14%"><col style="width:11%"></colgroup>
+<thead><tr><th>ID</th><th>Req.</th><th>Caso</th><th>Sev.</th><th>Descripción y reproducción</th><th>Esperado</th><th>Observado</th><th>Impacto</th><th>Tratamiento y commit</th><th>Estado</th></tr></thead><tbody>
+<tr><td>H-01</td><td>SEC-05</td><td>TC-12</td><td>Media</td><td>Con Content-Length: -1 el servidor llama a rfile.read(-1) y bloquea el hilo hasta que el cliente cierre. Pasos: POST /expedientes/101/nota con Content-Length: -1</td><td>400</td><td>Sin respuesta (timeout de 3 s)</td><td>Denegación de servicio por hilo bloqueado</td><td>servidor.py rechaza cantidad &lt; 0 con 400 (98ad2a5)</td><td>Corregido y verificado</td></tr>
+<tr><td>H-02</td><td>SEC-01</td><td>TC-04</td><td>Crítica</td><td>leer_expediente no verificaba rol ni propiedad. Pasos: lab-ana lee /expedientes/202; lab-maria lee /expedientes/202</td><td>403 sin nota</td><td>200 con nota 91 y datos de Luis</td><td>Filtración de expedientes ajenos</td><td>puede_leer(usuario, expediente) en leer_expediente (761a2e8)</td><td>Corregido y verificado</td></tr>
+<tr><td>H-03</td><td>SEC-03</td><td>TC-06, TC-07</td><td>Alta</td><td>autenticar ignoraba los campos revocada y expirada. Pasos: Leer o modificar con lab-vencida o tras revocar</td><td>401</td><td>200 con datos</td><td>Acceso con sesiones no válidas</td><td>autenticar devuelve None si la sesión está revocada o expirada (a7c983c)</td><td>Corregido y verificado</td></tr>
+<tr><td>H-04</td><td>SEC-02</td><td>TC-05</td><td>Crítica</td><td>actualizar_nota no comparaba la sede del docente con la del expediente. Pasos: lab-maria cambia la nota del expediente 202</td><td>403 y nota 91</td><td>200 y nota cambiada</td><td>Alteración de notas de otra sede</td><td>puede_modificar exige rol docente y misma sede (a7c983c)</td><td>Corregido y verificado</td></tr>
+<tr><td>H-05</td><td>SEC-04, SEC-05</td><td>TC-09, TC-11</td><td>Alta</td><td>Se aceptaban notas fuera de [0,100], NaN, inf y booleanos (JSON NaN llegaba a la API). Pasos: nota -1, 101, NaN, inf, true</td><td>400 y nota intacta</td><td>200 y valor persistido</td><td>Datos corruptos en el expediente</td><td>nota_valida: numérico finito, no booleano, entre 0 y 100 (b7aeb4c)</td><td>Corregido y verificado</td></tr>
+<tr><td>H-06</td><td>SEC-07</td><td>CT-01</td><td>Media</td><td>La bitácora guardaba el token y omitía los intentos denegados. Pasos: Leer, leer ajeno y actualizar; inspeccionar estado["auditoria"]</td><td>3 registros con usuario y código, sin token</td><td>2 registros con token</td><td>Credenciales expuestas y falta de trazabilidad</td><td>auditar(): usuario, acción, id y código; incluye 403 y 400 (b7aeb4c)</td><td>Corregido y verificado</td></tr>
+<tr><td>O-01</td><td>SEC-06</td><td>-</td><td>Baja</td><td>El código 404 (no existe) frente a 403 (existe, sin permiso) permite saber si un id existe. Pasos: lab-ana pide /expedientes/999 y /expedientes/202</td><td>Misma respuesta</td><td>404 y 403 distintos</td><td>Enumeración de identificadores</td><td>No se corrige: se acepta como riesgo residual</td><td>Aceptado como riesgo residual</td></tr>
+<tr><td>O-02</td><td>SEC-03</td><td>-</td><td>Baja</td><td>Estado global compartido por todos los hilos sin bloqueo. Pasos: Revisión estática de servidor.py</td><td>Acceso sincronizado</td><td>Sin locks</td><td>Condiciones de carrera con carga concurrente</td><td>Mejora recomendada; sin prueba de concurrencia</td><td>Por investigar</td></tr>
+<tr><td>O-03</td><td>SEC-03</td><td>-</td><td>Baja</td><td>revocar_sesion devuelve 200 sobre un token ya revocado o vencido. Pasos: POST /sesiones/revocar con lab-vencida</td><td>Idempotente o 401</td><td>200</td><td>Mensaje poco preciso</td><td>Sin cambio: no expone datos</td><td>Aceptado como riesgo residual</td></tr>
+<tr><td>O-04</td><td>SEC-05</td><td>-</td><td>Baja</td><td>La ruta de actualización acepta segmentos intermedios (id con ruta.split("/")[2]). Pasos: POST /expedientes/101/x/nota con lab-maria</td><td>404</td><td>200 y nota de 101 cambia de 82 a 55</td><td>URL no canónica llega a la actualización; la autorización se aplica al id 101</td><td>No se corrige en v1.0.0; mejora recomendada: comparar segmentos de forma exacta</td><td>Abierto (mejora recomendada)</td></tr>
+<tr><td>O-05</td><td>SEC-03</td><td>-</td><td>Baja</td><td>El cuerpo se procesa antes de autenticar. Pasos: POST /expedientes/101/nota sin token y cuerpo {nota:</td><td>401</td><td>400 JSON inválido</td><td>Sin datos filtrados ni cambios; se procesan hasta 1024 bytes sin sesión</td><td>No se corrige en v1.0.0; mejora recomendada: autenticar antes de leer el cuerpo</td><td>Abierto (mejora recomendada)</td></tr>
+<tr><td>O-06</td><td>SEC-07</td><td>-</td><td>Baja</td><td>La bitácora no registra 401 ni revocaciones (SEC-07 se cumple). Pasos: leer con lab-inexistente y lab-vencida, revocar lab-ana; inspeccionar la bitácora</td><td>Registros de los intentos</td><td>Lista vacía</td><td>Menor detección de abuso de sesiones</td><td>No se corrige en v1.0.0; mejora recomendada</td><td>Abierto (mejora recomendada)</td></tr>
+<tr><td>O-07</td><td>SEC-04</td><td>TC-11</td><td>Baja</td><td>Prueba: TC-11 por API solo envía -1 y 101; booleanos y 100.01 solo en unidad. Pasos: mutación M4 (18_pruebas_mutacion.txt)</td><td>Falla en unidad e integración</td><td>Falla solo en unidad</td><td>Ninguno en el producto</td><td>Mejora recomendada: ampliar valores en test_api; sin cambio de aserciones</td><td>Abierto (mejora recomendada)</td></tr>
+<tr><td>O-08</td><td>SEC-05</td><td>TC-12</td><td>Baja</td><td>Prueba: estado de clase compartido en test_api y tiempo fijo de 3 s en TC-12b. Pasos: revisión de tests/test_api.py</td><td>Estado por instancia</td><td>Estado de clase; 3 s fijos</td><td>Posible fragilidad en ejecución paralela o máquinas lentas</td><td>Sin cambio: la suite es secuencial</td><td>Aceptado como riesgo residual</td></tr>
+<tr><td>F-01</td><td>SEC-04</td><td>TC-11</td><td>-</td><td>Falso positivo de la prueba: en el primer rojo, los casos "85" y None fallaron por estado contaminado por el caso True, no por el producto. Pasos: Ejecutar TC-11 con estado compartido entre subpruebas</td><td>Cada caso independiente</td><td>Fallo en cascada</td><td>Ninguno en el producto</td><td>Se reinicia estado_inicial() en cada subprueba y se regeneró el registro rojo (1e6ce17)</td><td>Corregido (fallo de la prueba)</td></tr>
+<tr><td>F-02</td><td>-</td><td>-</td><td>-</td><td>Bandit no reporta incidencias; resultado no concluyente sobre defectos lógicos de autorización. Pasos: bandit -r src servidor.py</td><td>-</td><td>0 incidencias</td><td>Ninguno</td><td>Se complementa con pruebas dinámicas y lista de comprobación</td><td>Informativo</td></tr>
+</tbody></table>
+<p>Las pruebas de cierre de cada hallazgo son las pruebas de los casos indicados; la regresión completa (25 pruebas) se ejecutó tras cada corrección y al final. O-04 a O-08 proceden de la inspección cruzada y se registraron sin modificar el código ni las aserciones.</p>
+<h2>10. Indicadores y dictamen de liberación</h2>
+<table>
+<colgroup><col style="width:30%"><col style="width:38%"><col style="width:16%"><col style="width:16%"></colgroup>
+<thead><tr><th>Indicador</th><th>Fórmula</th><th>Base v0.1.0</th><th>Final v1.0.0</th></tr></thead><tbody>
+<tr><td>Casos planificados</td><td>-</td><td>12</td><td>12</td></tr>
+<tr><td>Aprobados / Fallidos / Bloqueados / No ejecutados</td><td>-</td><td>5 / 7 / 0 / 0</td><td>12 / 0 / 0 / 0</td></tr>
+<tr><td>Tasa de aprobación</td><td>aprobados / (aprobados + fallidos) x 100</td><td>5/12 = 41.7%</td><td>12/12 = 100%</td></tr>
+<tr><td>Avance</td><td>(aprobados + fallidos) / planificados x 100</td><td>12/12 = 100%</td><td>12/12 = 100%</td></tr>
+<tr><td>Cobertura de requisitos</td><td>requisitos con al menos una prueba válida / definidos x 100</td><td>7/7 = 100%</td><td>7/7 = 100%</td></tr>
+</tbody></table>
+<p>El estado base se obtuvo ejecutando la suite final contra el código original (commit ff94b3d). Una tasa de aprobación alta no demuestra ausencia de vulnerabilidades.</p>
+<p>Decisión: liberar con condiciones, únicamente como material didáctico en 127.0.0.1; no apto para producción. Defectos abiertos críticos o altos: 0 (H-01 a H-06 corregidos y verificados). Observaciones de severidad baja sin corregir: O-01, O-03 y O-08 (riesgo residual aceptado), O-02 (por investigar) y O-04 a O-07 (mejora recomendada). Condiciones: no exponer fuera de localhost, no reutilizar la autenticación simulada y reevaluar antes de cualquier uso con datos reales.</p>
+<p>Riesgo residual: enumeración de ids (404 frente a 403); condiciones de carrera no probadas; tokens estáticos sin expiración temporal real; sin TLS ni limitación de intentos; ruta de actualización permisiva y cuerpo procesado antes de autenticar. Limitaciones: un solo entorno de ejecución por sistema operativo (Windows 11 y Linux), sin pruebas de concurrencia ni fuzzing, SAST con una sola herramienta, sin escaneo DAST automatizado; la revisión cruzada y la prueba de reproducibilidad las hizo un solo compañero con ayuda de un asistente de IA; todos los commits del segundo integrante se hicieron el 2026-10-30, por lo que no se cumple el requisito de al menos 2 commits en al menos 2 días distintos para esa persona. Responsable de la decisión (hipotético): Andrey Hernández Salazar, rol QA.</p>
+<h2>11. Uso de IA y aportes</h2>
+<p>Se usó un asistente de IA (Claude Code) para proponer casos, pruebas y correcciones; las pruebas se ejecutaron y los resultados fueron verificados en el laboratorio local. En la actualización del 2026-10-30 el asistente ejecutó los comandos de la inspección cruzada, las mutaciones y la prueba de reproducibilidad en la máquina del segundo integrante y redactó el acta y la actualización del informe; el integrante revisa y valida esos resultados y es responsable de ellos.</p>
+<p>Aportes: Andrey Alonso Hernández Salazar, diseño, pruebas, correcciones, evidencias e informe; Javier Alejandro Mendoza Gonzalez, inspección cruzada independiente de la política de acceso y de TC-05 y TC-11 (acta, 8 mutaciones y sondeos HTTP), prueba de reproducibilidad con el README en Linux, mejoras de portabilidad del README y de <code>run.sh</code>, registro de las observaciones O-04 a O-08 y actualización del informe, todo mediante Pull Requests en ramas <code>docs/*</code> (ver <code>git log --author=AlejandroMG09</code>).</p>
+<h3>Commits del repositorio (autor original)</h3>
+<ul class='c'><li><code>ff94b3d</code> Add base security lab provided by the instructor</li><li><code>54b6c78</code> Add baseline test run evidence and run script</li><li><code>fc579f5</code> test: add failing read-authorization tests for SEC-01 (cycle 1 red)</li><li><code>761a2e8</code> fix: enforce read authorization by role in leer_expediente (SEC-01, cycle 1 green)</li><li><code>e6a4842</code> refactor: extract read policy into puede_leer and shared denial response</li><li><code>ebc091f</code> test: add failing session and unauthorized-update tests for SEC-02/SEC-03 (cycle 2 red)</li><li><code>a7c983c</code> fix: reject revoked/expired sessions and cross-site grade updates (SEC-02/SEC-03, cycle 2 green)</li><li><code>f269461</code> refactor: extract puede_modificar and return a fresh denial response per call</li><li><code>1e6ce17</code> test: add failing grade-validation and audit tests for SEC-04/SEC-07 (cycle 3 red)</li><li><code>b7aeb4c</code> feat: add nota_valida and token-free audit records (SEC-04/SEC-07, cycle 3 green)</li><li><code>76293a1</code> test: add API integration suite; negative Content-Length hangs the server (H-01 red)</li><li><code>98ad2a5</code> fix: reject negative Content-Length with 400 (H-01 green)</li><li><code>c328f7e</code> refactor: shorten test server poll interval to speed up the API suite</li><li><code>4c554a2</code> docs: add manual API test log, SAST report and two clean-state suite runs</li><li><code>166e9bc</code> docs: rewrite lab README with exact commands, actors and structure</li><li><code>b613953</code> docs: add final regression run and suite-versus-base comparison</li><li><code>5eabec4</code> docs: add traceability matrix, test case register and findings log as CSV</li><li><code>0eef796</code> docs: add black and white technical report (PDF)</li><li><code>216e80c</code> docs: fill report cover with course, group and team members</li></ul>
+</body></html>

@@ -50,4 +50,4 @@ Códigos: `200` permitido, `400` entrada inválida, `401` sesión ausente, revoc
 - `laboratorio_seguridad/tests/`: pruebas de unidad e integración.
 - `evidencias/`: registros rojo-verde-refactor, ejecuciones limpias, pruebas manuales y SAST. `evidencias/run.sh <archivo> <etiqueta>` ejecuta la suite y guarda el registro.
 - `matriz_trazabilidad.csv`, `casos_prueba.csv`, `hallazgos.csv`: anexos del informe.
-- `informe_seguridad.pdf`: informe técnico.
+- `informe_seguridad.pdf`: informe técnico. Su fuente es `informe/informe_seguridad.html`; el PDF se genera con `google-chrome --headless --no-pdf-header-footer --print-to-pdf=informe_seguridad.pdf informe/informe_seguridad.html`.
