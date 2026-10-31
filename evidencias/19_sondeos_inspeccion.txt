@@ -1,0 +1,31 @@
+# Sondeos dinamicos de la inspeccion cruzada (servidor local, datos sinteticos)
+# fecha: 2026-10-30T19:47:26-06:00
+# ejecutor: Javier Alejandro Mendoza Gonzalez (revisor); comandos ejecutados mediante un asistente de IA (Claude Code)
+# entorno: Linux 7.0.0-42-generic, Python 3.14.4; clon limpio en commit 216e80c
+
+## OB-3: sin token y con JSON malformado (SEC-03 espera 401)
+$ curl -X POST -d {nota: http://127.0.0.1:8765/expedientes/101/nota
+{"error": "JSON inválido"} [HTTP 400]
+
+## OB-3b: sin token y con cuerpo valido (control: 401)
+$ curl -X POST -d {"nota":55} http://127.0.0.1:8765/expedientes/101/nota
+{"error": "No autenticado"} [HTTP 401]
+
+## OB-2: segmento extra en la ruta de actualizacion (docente Central, expediente 101)
+$ curl -X POST -H Authorization: Bearer lab-maria -d {"nota":55} http://127.0.0.1:8765/expedientes/101/x/nota
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 55} [HTTP 200]
+## verificacion: la nota 101 cambio de 82 a 55
+$ curl -H Authorization: Bearer lab-admin http://127.0.0.1:8765/expedientes/101
+{"id": "101", "estudiante": "ana", "sede": "Central", "nota": 55} [HTTP 200]
+
+## OB-1: 404 frente a 403 (lab-ana)
+$ curl -H Authorization: Bearer lab-ana http://127.0.0.1:8765/expedientes/999
+{"error": "No existe"} [HTTP 404]
+$ curl -H Authorization: Bearer lab-ana http://127.0.0.1:8765/expedientes/202
+{"error": "Acceso denegado"} [HTTP 403]
+
+## OB-4: la bitacora no registra intentos sin sesion valida ni revocaciones (llamada directa a src/lab.py)
+leer con token desconocido -> (401, {'error': 'No autenticado'})
+leer con sesion vencida   -> (401, {'error': 'No autenticado'})
+revocar sesion de ana     -> (200, {'mensaje': 'Sesión revocada'})
+registros de auditoria    -> []
