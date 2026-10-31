@@ -4,8 +4,10 @@ Material didáctico, **no apto para producción**. Ejecutar solo en `127.0.0.1` 
 
 ## Entorno
 
-- Python 3.10 o superior (probado con 3.14.0) y biblioteca estándar. No hay que instalar paquetes.
+- Python 3.10 o superior (probado con 3.14.0 en Windows y 3.14.4 en Linux) y biblioteca estándar. No hay que instalar paquetes.
 - `curl` o PowerShell para las pruebas manuales (opcional).
+- Nombre del intérprete: en Windows suele ser `python` (o `py`); en Linux y macOS suele ser `python3`. Los comandos de este README usan `python`; sustituirlo por `python3` si el sistema responde `python: command not found`.
+- Nombre de `curl`: en Windows PowerShell se usa `curl.exe`; en Linux y macOS se usa `curl`.
 
 ## Ejecutar las pruebas
 
@@ -14,6 +16,8 @@ Desde la carpeta `laboratorio_seguridad`:
 ```
 python -m unittest discover -s tests -v
 ```
+
+En Linux o macOS: `python3 -m unittest discover -s tests -v`. Para repetir la ejecución en estado limpio, borrar antes las carpetas `__pycache__`.
 
 Resultado esperado: `Ran 25 tests ... OK` (14 de unidad en `tests/test_unidad.py` y 11 de integración con la API en `tests/test_api.py`). Cada prueba crea su propio estado sintético, por lo que no hay que restablecer nada entre ejecuciones.
 
@@ -28,7 +32,9 @@ curl.exe -X POST -H "Authorization: Bearer lab-maria" -H "Content-Type: applicat
 curl.exe -X POST -H "Authorization: Bearer lab-ana" http://127.0.0.1:8765/sesiones/revocar
 ```
 
-Detener con CTRL+C. Para restablecer los datos y sesiones sintéticos, detener el servidor y volver a ejecutarlo. La secuencia completa de pruebas manuales está en `../evidencias/pruebas_manuales.sh` (requiere el servidor activo; usar `sh` o Git Bash).
+Los ejemplos anteriores usan `curl.exe` (Windows); en Linux o macOS se escriben igual con `curl` y con comillas simples en el cuerpo JSON, por ejemplo `curl -X POST -H "Authorization: Bearer lab-maria" -H "Content-Type: application/json" -d '{"nota":85}' http://127.0.0.1:8765/expedientes/101/nota`.
+
+Detener con CTRL+C. Para restablecer los datos y sesiones sintéticos, detener el servidor y volver a ejecutarlo. La secuencia completa de pruebas manuales está en `../evidencias/pruebas_manuales.sh` (requiere el servidor activo; usar `sh` en Linux o macOS, o Git Bash en Windows).
 
 ## Actores sintéticos
 
