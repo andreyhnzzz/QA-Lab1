@@ -2,7 +2,7 @@
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
-from src.lab import estado_inicial, leer_expediente, actualizar_nota, revocar_sesion
+from src.lab import estado_inicial, autenticar, auditar, leer_expediente, actualizar_nota, revocar_sesion
 
 
 class ServidorLaboratorio(BaseHTTPRequestHandler):
@@ -35,7 +35,12 @@ class ServidorLaboratorio(BaseHTTPRequestHandler):
         if ruta == "/sesiones/revocar":
             codigo, resultado = revocar_sesion(self.estado, self._token())
             return self._salida(codigo, resultado)
-        if ruta.startswith("/expedientes/") and ruta.endswith("/nota"):
+        segmentos = ruta.split("/")
+        if len(segmentos) == 4 and segmentos[1] == "expedientes" and segmentos[3] == "nota":
+            expediente_id = segmentos[2]
+            if autenticar(self.estado, self._token()) is None:
+                auditar(self.estado, None, "actualizacion", expediente_id, 401)
+                return self._salida(401, {"error": "No autenticado"})
             try:
                 cantidad = int(self.headers.get("Content-Length", "0"))
                 if cantidad < 0:
@@ -48,7 +53,7 @@ class ServidorLaboratorio(BaseHTTPRequestHandler):
                 nota = datos.get("nota")
             except (ValueError, UnicodeError):
                 return self._salida(400, {"error": "JSON inválido"})
-            codigo, resultado = actualizar_nota(self.estado, self._token(), ruta.split("/")[2], nota)
+            codigo, resultado = actualizar_nota(self.estado, self._token(), expediente_id, nota)
             return self._salida(codigo, resultado)
         return self._salida(404, {"error": "Ruta inexistente"})
 
